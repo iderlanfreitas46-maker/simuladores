@@ -319,7 +319,7 @@ body::before{
       <div style="margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dimtxt);">BMS-001 / NFPA 85-86</div>
     </div>
     <div class="mimic-wrap">
-      <svg id="mimic" viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+      <svg id="mimic" viewBox="0 0 640 370" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
         <defs>
           <pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse">
             <path d="M40 0L0 0 0 40" fill="none" stroke="rgba(0,207,255,0.04)" stroke-width="1"/>
@@ -417,11 +417,41 @@ body::before{
         <text x="506" y="246" font-family="Share Tech Mono" font-size="7" fill="#304d62">BE-701</text>
         <line id="uv-b" x1="502" y1="237" x2="488" y2="237" stroke="#304d62" stroke-width="1" stroke-dasharray="3,2"/>
 
-        <!-- BOILER CHAMA -->
-        <rect x="178" y="300" width="250" height="50" rx="4"
+        <!-- BOILER -->
+        <rect id="boiler-body" x="178" y="300" width="250" height="58" rx="4"
               fill="rgba(7,13,20,.6)" stroke="#1e3a50" stroke-width="1.5"/>
-        <text x="252" y="322" font-family="Share Tech Mono" font-size="9" fill="#304d62">CALDEIRA</text>
-        <text x="236" y="336" font-family="Share Tech Mono" font-size="8" fill="#304d62">LSL-201 · STEAM OUTPUT</text>
+        <!-- boiler glow inner -->
+        <rect id="boiler-glow" x="182" y="304" width="242" height="50" rx="3"
+              fill="rgba(255,80,0,0)" opacity="0"/>
+        <!-- CHAMA INTERNA DA CALDEIRA -->
+        <g id="boiler-flame" opacity="0">
+          <ellipse cx="303" cy="348" rx="50" ry="8" fill="rgba(255,140,0,0.2)"/>
+          <ellipse cx="280" cy="336" rx="16" ry="20" fill="rgba(255,140,0,0.5)"/>
+          <ellipse cx="303" cy="334" rx="18" ry="22" fill="rgba(255,100,0,0.6)"/>
+          <ellipse cx="326" cy="336" rx="14" ry="18" fill="rgba(255,140,0,0.5)"/>
+          <ellipse cx="303" cy="332" rx="10" ry="14" fill="rgba(255,220,100,0.7)"/>
+        </g>
+        <text x="220" y="318" font-family="Share Tech Mono" font-size="9" fill="#304d62" id="boiler-label">CALDEIRA</text>
+        <text x="196" y="330" font-family="Share Tech Mono" font-size="8" fill="#304d62">LSL-201</text>
+        <!-- TEMP display -->
+        <rect x="336" y="304" width="80" height="42" rx="2" fill="rgba(0,0,0,0.4)" stroke="#1e3a50" stroke-width="1"/>
+        <text x="340" y="316" font-family="Share Tech Mono" font-size="7" fill="#304d62">TEMP</text>
+        <text id="boiler-temp" x="340" y="336" font-family="Share Tech Mono" font-size="16" fill="#304d62">--°C</text>
+        <!-- VAPOR pipes saindo do topo -->
+        <g id="boiler-flame" opacity="0">
+  <ellipse cx="303" cy="342" rx="45" ry="8" fill="rgba(255,140,0,0.25)"/>
+  <ellipse cx="283" cy="332" rx="15" ry="18" fill="rgba(255,100,0,0.55)"/>
+  <ellipse cx="303" cy="330" rx="17" ry="20" fill="rgba(255,80,0,0.65)"/>
+  <ellipse cx="323" cy="332" rx="13" ry="16" fill="rgba(255,100,0,0.55)"/>
+  <ellipse cx="303" cy="328" rx="9" ry="12" fill="rgba(255,220,80,0.75)"/>
+</g>
+<g id="steam-group" opacity="0">
+          <line x1="220" y1="300" x2="220" y2="270" stroke="var(--cyan)" stroke-width="2" stroke-dasharray="4,3" opacity="0.6"/>
+          <text x="210" y="264" font-family="Share Tech Mono" font-size="9" fill="var(--cyan)" opacity="0.7">≋</text>
+          <line x1="270" y1="300" x2="270" y2="265" stroke="var(--cyan)" stroke-width="2" stroke-dasharray="4,3" opacity="0.5"/>
+          <text x="260" y="259" font-family="Share Tech Mono" font-size="9" fill="var(--cyan)" opacity="0.6">≋</text>
+          <text x="186" y="262" font-family="Share Tech Mono" font-size="7" fill="var(--cyan)" opacity="0.8">STEAM OUT</text>
+        </g>
         <line id="p-exhaust" x1="303" y1="288" x2="303" y2="300" stroke="#1a3040" stroke-width="3" stroke-linecap="round"/>
 
         <!-- LABELS -->
@@ -683,6 +713,45 @@ function drawMimic(){
   sp2.style.animation=s.IGNITION_TRANSFORMER?'pulse .2s ease-in-out infinite':'';
   sa('uv-b','stroke',s.UV_FLAME_DETECTED?'var(--purple)':'#304d62');
   sa('uv-b','stroke-width',s.UV_FLAME_DETECTED?'2':'1');
+
+  // CHAMA INTERNA DA CALDEIRA
+  const boilerFlame = el('boiler-flame');
+  if(boilerFlame) {
+    boilerFlame.setAttribute('opacity', fuelOn ? '1' : '0');
+    if(fuelOn) boilerFlame.style.animation = 'flicker .4s ease-in-out infinite alternate';
+    else boilerFlame.style.animation = '';
+  }
+  const boilerOn = s.MAIN_FUEL_VALVE;
+  const boilerBody = el('boiler-body');
+  const boilerGlow = el('boiler-glow');
+  const steamGrp   = el('steam-group');
+  const tempEl     = el('boiler-temp');
+  const boilerLbl  = el('boiler-label');
+  if(boilerOn){
+    if(!window._boilerTemp) window._boilerTemp = 80;
+    if(window._boilerTemp < 185) window._boilerTemp += 0.15;
+    const t = Math.round(window._boilerTemp);
+    const hot = t > 150;
+    boilerBody.setAttribute('stroke', hot?'var(--orange)':'var(--yellow)');
+    boilerBody.setAttribute('fill','rgba(255,80,0,0.07)');
+    boilerGlow.setAttribute('fill',`rgba(255,${hot?60:120},0,0.09)`);
+    boilerGlow.setAttribute('opacity','1');
+    steamGrp.setAttribute('opacity', hot?'1':'0.4');
+    tempEl.textContent = t+'°C';
+    tempEl.setAttribute('fill', hot?'var(--orange)':'var(--yellow)');
+    boilerLbl.setAttribute('fill', hot?'var(--orange)':'var(--yellow)');
+  } else {
+    if(window._boilerTemp && window._boilerTemp > 25) window._boilerTemp -= 0.3;
+    else window._boilerTemp = 25;
+    const t = Math.round(window._boilerTemp||25);
+    boilerBody.setAttribute('stroke','#1e3a50');
+    boilerBody.setAttribute('fill','rgba(7,13,20,.6)');
+    boilerGlow.setAttribute('opacity','0');
+    steamGrp.setAttribute('opacity','0');
+    tempEl.textContent = t>30 ? t+'°C' : '--°C';
+    tempEl.setAttribute('fill','#304d62');
+    boilerLbl.setAttribute('fill','#304d62');
+  }
 }
 
 function sp(id,color){const e=el(id);if(e)e.setAttribute('stroke',color);}
