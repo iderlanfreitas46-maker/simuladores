@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMS — Burner Management System</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#04080d;--panel:#080e16;--panel2:#0b1520;
+  --border:#0e2538;--border2:#163550;
+  --green:#00ff88;--cyan:#00cfff;--yellow:#ffe033;
+  --orange:#ff8c00;--red:#ff2244;--purple:#b06aff;
+  --dim:#1e3a50;--dimtxt:#304d62;
+  --txt:#8ab8d0;--txthi:#d8eef8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:var(--bg);
+  font-family:'Rajdhani',sans-serif;
+  color:var(--txt);
+}
+
+body::before{
+  content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,
+    transparent,transparent 2px,
+    rgba(0,207,255,0.018) 2px,rgba(0,207,255,0.018) 4px);
+  pointer-events:none;z-index:9999;
+}
+
+/* ── TOP BAR ── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:44px;flex-shrink:0;
+  background:linear-gradient(90deg,#04080d,#070f18,#04080d);
+  border-bottom:1px solid var(--border2);
+  position:relative;
+}
+.topbar::after{
+  content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan) 30%,var(--green) 70%,transparent);
+  opacity:.6;
+}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-badge{
+  width:32px;height:32px;border-radius:4px;
+  background:linear-gradient(135deg,#0e3a60,#1a5a90);
+  border:1px solid var(--cyan);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:12px;font-weight:900;color:#fff;
+  box-shadow:0 0 12px rgba(0,207,255,0.4);
+}
+.logo-text{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:3px;color:var(--cyan);}
+.logo-sub{font-size:8px;color:var(--dimtxt);letter-spacing:2px;}
+.topbar-center{
+  font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:4px;
+  color:var(--txthi);text-align:center;
+}
+.topbar-center span{color:var(--cyan);font-size:9px;letter-spacing:2px;display:block;margin-top:2px;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+#clock{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--cyan);letter-spacing:2px;}
+.sys-state{
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  padding:3px 12px;border-radius:2px;letter-spacing:2px;
+  background:rgba(0,207,255,0.1);border:1px solid rgba(0,207,255,0.3);
+  color:var(--cyan);transition:all .3s;min-width:160px;text-align:center;
+}
+
+/* ── MAIN GRID ── */
+.main{
+  display:grid;
+  grid-template-columns:200px 1fr 230px;
+  grid-template-rows:1fr 44px;
+  gap:6px;padding:6px;
+  height:calc(100vh - 44px);
+}
+
+/* ── PANELS ── */
+.panel{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:4px;overflow:hidden;display:flex;flex-direction:column;
+}
+.ph{
+  display:flex;align-items:center;gap:7px;
+  padding:5px 10px;background:var(--panel2);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.ph-dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);box-shadow:0 0 5px var(--cyan);}
+.ph-title{font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:2px;color:var(--cyan);}
+
+/* ── LEFT: INPUTS ── */
+.left-col{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;gap:6px;}
+
+.input-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:5px 10px;border-bottom:1px solid rgba(14,37,56,.5);
+  cursor:pointer;transition:background .15s;
+}
+.input-row:hover{background:rgba(0,207,255,0.05);}
+.input-label{font-size:11px;color:var(--txthi);font-weight:500;}
+.input-tag{font-size:8px;color:var(--dimtxt);font-family:'Share Tech Mono',monospace;}
+.led{width:12px;height:12px;border-radius:50%;flex-shrink:0;transition:all .3s;}
+.led.on{background:var(--green);box-shadow:0 0 7px var(--green);}
+.led.off{background:#1a3040;}
+.led.red{background:var(--red);box-shadow:0 0 7px var(--red);}
+.led.pulse{animation:pulse .8s ease-in-out infinite;}
+
+/* ── CENTER TOP: P&ID ── */
+.mimic-panel{grid-column:2;grid-row:1;min-height:0;}
+.mimic-wrap{padding:6px;flex:1;display:flex;align-items:center;justify-content:center;min-height:0;}
+#mimic{width:100%;height:100%;max-height:100%;}
+
+/* ── CENTER BOTTOM: SEQ + CONTROLS ── */
+.bottom-bar{
+  grid-column:2;grid-row:2;
+  display:flex;align-items:center;gap:6px;
+}
+
+/* STEPS */
+.steps-wrap{display:flex;align-items:center;gap:2px;flex:1;}
+.step{
+  flex:1;background:var(--panel2);border:1px solid var(--border);
+  border-radius:3px;padding:4px 2px;text-align:center;transition:all .4s;
+}
+.step.active{background:rgba(0,207,255,0.12);border-color:var(--cyan);box-shadow:0 0 8px rgba(0,207,255,0.2);}
+.step.done{background:rgba(0,255,136,0.08);border-color:var(--green);}
+.step.fail{background:rgba(255,34,68,0.12);border-color:var(--red);animation:pulse .6s ease-in-out infinite;}
+.step-num{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--cyan);}
+.step.done .step-num{color:var(--green);}
+.step.fail .step-num{color:var(--red);}
+.step-name{font-size:7px;color:var(--dimtxt);letter-spacing:.5px;text-transform:uppercase;}
+.step.done .step-name{color:var(--green);opacity:.7;}
+.step.fail .step-name{color:var(--red);opacity:.7;}
+
+/* BUTTONS */
+.ctrl-btns{display:flex;gap:4px;flex-shrink:0;}
+.btn{
+  font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:1px;
+  padding:6px 10px;border-radius:3px;cursor:pointer;border:1px solid;
+  text-transform:uppercase;transition:all .2s;white-space:nowrap;
+}
+.btn-start{background:rgba(0,255,136,.12);color:var(--green);border-color:rgba(0,255,136,.4);}
+.btn-start:hover:not(:disabled){background:rgba(0,255,136,.25);box-shadow:0 0 10px rgba(0,255,136,.3);}
+.btn-reset{background:rgba(0,207,255,.1);color:var(--cyan);border-color:rgba(0,207,255,.35);}
+.btn-reset:hover:not(:disabled){background:rgba(0,207,255,.2);}
+.btn-trip{background:rgba(255,34,68,.1);color:var(--red);border-color:rgba(255,34,68,.35);}
+.btn-trip:hover:not(:disabled){background:rgba(255,34,68,.2);}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+
+/* ── RIGHT: TIMERS + OUTPUTS + LOG ── */
+.right-col{grid-column:3;grid-row:1/3;display:flex;flex-direction:column;gap:6px;}
+
+/* TIMERS */
+.timers-wrap{display:flex;gap:4px;padding:6px;}
+.timer-card{
+  flex:1;background:var(--panel2);border:1px solid var(--border);
+  border-radius:3px;padding:6px 4px;text-align:center;
+}
+.timer-name{font-size:7px;color:var(--dimtxt);letter-spacing:1px;margin-bottom:3px;}
+.timer-val{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--cyan);}
+.timer-sub{font-size:7px;color:var(--dimtxt);}
+.timer-done{font-size:8px;color:var(--green);visibility:hidden;letter-spacing:1px;}
+.timer-done.show{visibility:visible;}
+.ring-svg{display:block;margin:0 auto 3px;}
+
+/* OUTPUTS */
+.out-scroll{flex:1;overflow:hidden;}
+.output-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:5px 10px;border-bottom:1px solid rgba(14,37,56,.5);
+}
+.out-label{font-size:10px;font-weight:500;}
+.out-state{
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  padding:2px 7px;border-radius:2px;letter-spacing:1px;transition:all .3s;
+}
+.out-state.on{background:rgba(0,255,136,.15);color:var(--green);border:1px solid rgba(0,255,136,.3);}
+.out-state.off{background:rgba(14,37,56,.5);color:var(--dimtxt);border:1px solid var(--border);}
+.out-state.trip{background:rgba(255,34,68,.2);color:var(--red);border:1px solid rgba(255,34,68,.4);animation:pulse .5s infinite;}
+
+/* LOG */
+.log-scroll{flex:0 0 120px;overflow-y:auto;}
+.log-scroll::-webkit-scrollbar{width:2px;}
+.log-scroll::-webkit-scrollbar-thumb{background:var(--border2);}
+.alarm-item{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 10px;border-bottom:1px solid rgba(14,37,56,.4);
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+}
+.alarm-item.alarm{color:var(--red);}
+.alarm-item.warn{color:var(--yellow);}
+.alarm-item.ok{color:var(--green);}
+.alarm-item.info{color:var(--cyan);}
+.alarm-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;}
+.alarm-item.alarm .alarm-dot{background:var(--red);}
+.alarm-item.warn  .alarm-dot{background:var(--yellow);}
+.alarm-item.ok    .alarm-dot{background:var(--green);}
+.alarm-item.info  .alarm-dot{background:var(--cyan);}
+.alarm-time{color:var(--dimtxt);flex-shrink:0;font-size:8px;}
+
+/* STAMP */
+.stamp{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 10px;background:var(--panel2);
+  border-top:1px solid var(--border);flex-shrink:0;
+}
+.stamp-badge{
+  width:20px;height:20px;border-radius:2px;
+  background:linear-gradient(135deg,#0e3a60,#1a5a90);
+  border:1px solid var(--cyan);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:8px;font-weight:900;color:#fff;
+}
+.stamp-name{font-family:'Orbitron',sans-serif;font-size:8px;color:var(--txthi);letter-spacing:2px;}
+.stamp-sub{font-size:7px;color:var(--dimtxt);letter-spacing:1px;}
+
+/* DEMO BADGE */
+.demo-badge{
+  font-family:'Share Tech Mono',monospace;font-size:8px;
+  padding:2px 8px;border-radius:2px;
+  background:rgba(255,224,51,.1);border:1px solid rgba(255,224,51,.3);
+  color:var(--yellow);letter-spacing:1px;animation:pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+@keyframes flicker{0%{transform:scale(1) translateY(0);}100%{transform:scale(1.07) translateY(-2px);}}
+.flame-on{opacity:1;animation:flicker .35s ease-in-out infinite alternate;}
+.flame-off{opacity:0;}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-badge">IF</div>
+    <div>
+      <div class="logo-text">IDERLAN FREITAS</div>
+      <div class="logo-sub">BMS · AUTOMAÇÃO · SCADA</div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    BURNER MANAGEMENT SYSTEM
+    <span>QUEIMADOR INDUSTRIAL — GN/GLP + ÓLEO · TAG: BMS-001</span>
+  </div>
+  <div class="topbar-right">
+    <div class="demo-badge">● DEMO AUTO</div>
+    <div id="clock">00:00:00</div>
+    <div class="sys-state" id="sys-state">STANDBY</div>
+  </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main">
+
+  <!-- ══ LEFT: ENTRADAS ══ -->
+  <div class="left-col">
+    <div class="panel" style="flex:1;">
+      <div class="ph">
+        <div class="ph-dot"></div>
+        <div class="ph-title">Entradas Digitais</div>
+      </div>
+      <div class="input-row" onclick="tog('E_STOP_OK')">
+        <div><div class="input-label">E-STOP OK</div><div class="input-tag">XI-001</div></div>
+        <div class="led on" id="led-E_STOP_OK"></div>
+      </div>
+      <div class="input-row" onclick="tog('AIR_PRESSURE_OK')">
+        <div><div class="input-label">Pressão Ar Comb.</div><div class="input-tag">PSH-101</div></div>
+        <div class="led on" id="led-AIR_PRESSURE_OK"></div>
+      </div>
+      <div class="input-row" onclick="tog('AIR_FLOW_OK')">
+        <div><div class="input-label">Fluxo Ar Purge</div><div class="input-tag">FSH-102</div></div>
+        <div class="led on" id="led-AIR_FLOW_OK"></div>
+      </div>
+      <div class="input-row" onclick="tog('LOW_WATER_OK')">
+        <div><div class="input-label">Nível Caldeira OK</div><div class="input-tag">LSL-201</div></div>
+        <div class="led on" id="led-LOW_WATER_OK"></div>
+      </div>
+      <div class="input-row" onclick="tog('PILOT_GAS_PRESSURE_OK')">
+        <div><div class="input-label">Pressão Gás Piloto</div><div class="input-tag">PSH-301</div></div>
+        <div class="led on" id="led-PILOT_GAS_PRESSURE_OK"></div>
+      </div>
+      <div class="input-row" onclick="tog('MAIN_FUEL_PRESSURE_OK')">
+        <div><div class="input-label">Pressão Comb. Princ.</div><div class="input-tag">PSH-401</div></div>
+        <div class="led on" id="led-MAIN_FUEL_PRESSURE_OK"></div>
+      </div>
+      <div class="input-row" onclick="tog('DAMPER_OPEN_OK')">
+        <div><div class="input-label">Damper Purge OK</div><div class="input-tag">ZSH-501</div></div>
+        <div class="led on" id="led-DAMPER_OPEN_OK"></div>
+      </div>
+      <div class="input-row" onclick="tog('FAN_RUNNING')">
+        <div><div class="input-label">Ventilador Ligado</div><div class="input-tag">XS-601</div></div>
+        <div class="led on" id="led-FAN_RUNNING"></div>
+      </div>
+      <div class="input-row" onclick="tog('UV_FLAME_DETECTED')" style="border-top:1px solid var(--border2);">
+        <div><div class="input-label" style="color:var(--purple);">Scanner UV Chama</div><div class="input-tag">BE-701</div></div>
+        <div class="led off" id="led-UV_FLAME_DETECTED"></div>
+      </div>
+      <div class="input-row">
+        <div><div class="input-label">Chama Falsa</div><div class="input-tag">BE-702</div></div>
+        <div class="led off" id="led-FALSE_FLAME"></div>
+      </div>
+      <div class="input-row" style="border-top:1px solid var(--border2);">
+        <div><div class="input-label" style="color:var(--green);">Master Permissive</div><div class="input-tag">R1-MPS</div></div>
+        <div class="led off" id="led-MASTER_PERMISSIVE"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CENTER: P&ID ══ -->
+  <div class="panel mimic-panel">
+    <div class="ph">
+      <div class="ph-dot"></div>
+      <div class="ph-title">P&ID — Mimic Queimador Industrial</div>
+      <div style="margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dimtxt);">BMS-001 / NFPA 85-86</div>
+    </div>
+    <div class="mimic-wrap">
+      <svg id="mimic" viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M40 0L0 0 0 40" fill="none" stroke="rgba(0,207,255,0.04)" stroke-width="1"/>
+          </pattern>
+          <radialGradient id="fg" cx="50%" cy="80%" r="60%">
+            <stop offset="0%"   stop-color="#fff700"/>
+            <stop offset="40%"  stop-color="#ff8c00" stop-opacity=".9"/>
+            <stop offset="100%" stop-color="#ff2200" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <filter id="glow2"><feGaussianBlur stdDeviation="7" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <rect width="640" height="360" fill="url(#g)"/>
+
+        <!-- GAS LEFT -->
+        <text x="10" y="106" font-family="Share Tech Mono" font-size="9" fill="#304d62">GN/GLP</text>
+        <text x="10" y="117" font-family="Share Tech Mono" font-size="8" fill="#304d62">PSH-301</text>
+        <line id="p-gas-in" x1="10" y1="124" x2="90" y2="124" stroke="#1a3040" stroke-width="4" stroke-linecap="round"/>
+        <!-- PILOT VALVE XV-301 -->
+        <polygon id="v-pil1" points="90,114 110,124 90,134"  fill="rgba(0,0,0,0)" stroke="#1a3040" stroke-width="2"/>
+        <polygon id="v-pil2" points="130,114 110,124 130,134" fill="rgba(0,0,0,0)" stroke="#1a3040" stroke-width="2"/>
+        <line id="v-pil-stem" x1="110" y1="114" x2="110" y2="104" stroke="#1a3040" stroke-width="1.5"/>
+        <rect id="v-pil-act" x="102" y="97" width="16" height="9" rx="1" fill="var(--panel)" stroke="#1a3040" stroke-width="1"/>
+        <text x="88" y="150" font-family="Share Tech Mono" font-size="8" fill="#304d62">XV-301</text>
+        <text x="90" y="160" font-family="Share Tech Mono" font-size="7" fill="#304d62">PILOTO</text>
+        <line id="p-pil"  x1="130" y1="124" x2="210" y2="124" stroke="#1a3040" stroke-width="4" stroke-linecap="round"/>
+        <line id="p-pil2" x1="210" y1="124" x2="210" y2="188" stroke="#1a3040" stroke-width="4" stroke-linecap="round"/>
+
+        <!-- FUEL TOP -->
+        <text x="330" y="18" font-family="Share Tech Mono" font-size="9" fill="#304d62">ÓLEO COMBUSTÍVEL</text>
+        <text x="330" y="29" font-family="Share Tech Mono" font-size="8" fill="#304d62">PSH-401</text>
+        <line id="p-fuel-in" x1="400" y1="32" x2="400" y2="74" stroke="#1a3040" stroke-width="4" stroke-linecap="round"/>
+        <!-- MAIN VALVE XV-401 -->
+        <polygon id="v-main1" points="390,74 400,94 390,114"  fill="rgba(0,0,0,0)" stroke="#1a3040" stroke-width="2"/>
+        <polygon id="v-main2" points="410,74 400,94 410,114"  fill="rgba(0,0,0,0)" stroke="#1a3040" stroke-width="2"/>
+        <line id="v-main-stem" x1="400" y1="74" x2="412" y2="74" stroke="#1a3040" stroke-width="1.5"/>
+        <rect id="v-main-act" x="410" y="66" width="16" height="9" rx="1" fill="var(--panel)" stroke="#1a3040" stroke-width="1"/>
+        <text x="376" y="130" font-family="Share Tech Mono" font-size="8" fill="#304d62">XV-401</text>
+        <text x="376" y="140" font-family="Share Tech Mono" font-size="7" fill="#304d62">PRINCIPAL</text>
+        <line id="p-main"  x1="400" y1="114" x2="400" y2="188" stroke="#1a3040" stroke-width="4" stroke-linecap="round"/>
+
+        <!-- AIR RIGHT -->
+        <text x="548" y="96" font-family="Share Tech Mono" font-size="9" fill="#304d62">AR COMB.</text>
+        <text x="548" y="107" font-family="Share Tech Mono" font-size="8" fill="#304d62">FSH-102</text>
+        <circle id="fan-c" cx="574" cy="130" r="22" fill="none" stroke="#1a3040" stroke-width="2"/>
+        <text id="fan-t" x="564" y="136" font-family="Share Tech Mono" font-size="14" fill="#1a3040">✈</text>
+        <text x="558" y="162" font-family="Share Tech Mono" font-size="8" fill="#304d62">VNT-601</text>
+        <!-- DAMPER -->
+        <rect id="dam-r" x="494" y="120" width="36" height="22" rx="2" fill="none" stroke="#1a3040" stroke-width="1.5"/>
+        <line id="dam-l" x1="494" y1="131" x2="530" y2="131" stroke="#1a3040" stroke-width="3" stroke-linecap="round"/>
+        <text x="494" y="154" font-family="Share Tech Mono" font-size="8" fill="#304d62">VD-501</text>
+        <line id="p-air"  x1="552" y1="131" x2="530" y2="131" stroke="#1a3040" stroke-width="4" stroke-linecap="round"/>
+        <line id="p-air2" x1="494" y1="131" x2="460" y2="131" stroke="#1a3040" stroke-width="4" stroke-linecap="round"/>
+        <line id="p-air-in"  x1="460" y1="131" x2="460" y2="188" stroke="#1a3040" stroke-width="4" stroke-linecap="round"/>
+        <line id="p-air-in2" x1="460" y1="188" x2="428" y2="188" stroke="#1a3040" stroke-width="4" stroke-linecap="round"/>
+
+        <!-- BURNER BODY -->
+        <rect id="burner" x="178" y="188" width="250" height="100" rx="4"
+              fill="rgba(7,13,20,.8)" stroke="#1e3a50" stroke-width="1.5"/>
+        <text x="256" y="208" font-family="Share Tech Mono" font-size="9" fill="#304d62">QUEIMADOR</text>
+        <text x="232" y="220" font-family="Share Tech Mono" font-size="8" fill="#304d62">BMS-001 / TAG-Q01 / NFPA 85</text>
+
+        <!-- pilot nozzle -->
+        <rect x="196" y="228" width="28" height="14" rx="2" fill="rgba(7,13,20,.9)" stroke="#1e3a50" stroke-width="1.5"/>
+        <text x="200" y="239" font-family="Share Tech Mono" font-size="7" fill="#304d62">PIL</text>
+
+        <!-- main nozzle -->
+        <rect x="378" y="228" width="28" height="14" rx="2" fill="rgba(7,13,20,.9)" stroke="#1e3a50" stroke-width="1.5"/>
+        <text x="382" y="239" font-family="Share Tech Mono" font-size="7" fill="#304d62">MAIN</text>
+
+        <!-- SPARK -->
+        <text id="spark" x="172" y="242" font-family="Share Tech Mono" font-size="20" fill="#1a3040" opacity="0">⚡</text>
+
+        <!-- PILOT FLAME -->
+        <g id="fl-pil" class="flame-off" transform="translate(210,226)">
+          <ellipse cx="0" cy="0" rx="12" ry="6" fill="rgba(255,200,0,.25)" filter="url(#glow)"/>
+          <ellipse cx="0" cy="-10" rx="7" ry="14" fill="url(#fg)" filter="url(#glow)"/>
+          <ellipse cx="0" cy="-5"  rx="4" ry="8"  fill="rgba(255,255,200,.75)"/>
+        </g>
+
+        <!-- MAIN FLAME -->
+        <g id="fl-main" class="flame-off" transform="translate(310,226)">
+          <ellipse cx="0" cy="0" rx="65" ry="12" fill="rgba(255,140,0,.15)" filter="url(#glow2)"/>
+          <ellipse cx="-14" cy="-22" rx="18" ry="32" fill="url(#fg)" filter="url(#glow2)" opacity=".9"/>
+          <ellipse cx="14"  cy="-18" rx="16" ry="28" fill="url(#fg)" filter="url(#glow2)" opacity=".8"/>
+          <ellipse cx="0"   cy="-24" rx="14" ry="26" fill="url(#fg)" filter="url(#glow2)"/>
+          <ellipse cx="0"   cy="-14" rx="8"  rx2="8" ry="16" fill="rgba(255,255,200,.65)"/>
+        </g>
+
+        <!-- UV SCANNER -->
+        <rect x="502" y="224" width="44" height="26" rx="3" fill="rgba(7,13,20,.8)" stroke="#1e3a50" stroke-width="1.5"/>
+        <text x="506" y="236" font-family="Share Tech Mono" font-size="8" fill="#304d62">UV SCAN</text>
+        <text x="506" y="246" font-family="Share Tech Mono" font-size="7" fill="#304d62">BE-701</text>
+        <line id="uv-b" x1="502" y1="237" x2="488" y2="237" stroke="#304d62" stroke-width="1" stroke-dasharray="3,2"/>
+
+        <!-- BOILER -->
+        <rect x="178" y="300" width="250" height="50" rx="4"
+              fill="rgba(7,13,20,.6)" stroke="#1e3a50" stroke-width="1.5"/>
+        <text x="252" y="322" font-family="Share Tech Mono" font-size="9" fill="#304d62">CALDEIRA</text>
+        <text x="236" y="336" font-family="Share Tech Mono" font-size="8" fill="#304d62">LSL-201 · STEAM OUTPUT</text>
+        <line id="p-exhaust" x1="303" y1="288" x2="303" y2="300" stroke="#1a3040" stroke-width="3" stroke-linecap="round"/>
+
+        <!-- LABELS -->
+        <text x="10" y="354" font-family="Share Tech Mono" font-size="7" fill="#1e3a50">PURGE=60s · IGN.TRIAL=5s · FLAME PROVING=3s · IEC 61131-3 STRUCTURED TEXT</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ══ BOTTOM BAR: STEPS + CONTROLS ══ -->
+  <div class="bottom-bar">
+    <div class="steps-wrap">
+      <div class="step active" id="step-0"><div class="step-num">0</div><div class="step-name">Standby</div></div>
+      <div class="step" id="step-1"><div class="step-num">1</div><div class="step-name">Permissiva</div></div>
+      <div class="step" id="step-2"><div class="step-num">2</div><div class="step-name">Purge</div></div>
+      <div class="step" id="step-3"><div class="step-num">3</div><div class="step-name">Piloto</div></div>
+      <div class="step" id="step-4"><div class="step-num">4</div><div class="step-name">Ignição</div></div>
+      <div class="step" id="step-5"><div class="step-num">5</div><div class="step-name">Prova</div></div>
+      <div class="step" id="step-6"><div class="step-num">6</div><div class="step-name">Queima</div></div>
+      <div class="step" id="step-7"><div class="step-num">T</div><div class="step-name">Trip</div></div>
+    </div>
+    <div class="ctrl-btns">
+      <button class="btn btn-start" id="btn-start" onclick="cmdStart()">▶ START</button>
+      <button class="btn btn-reset" id="btn-reset" onclick="cmdReset()">↺ RESET</button>
+      <button class="btn btn-trip"  id="btn-trip"  onclick="cmdTrip()">⚠ TRIP</button>
+    </div>
+  </div>
+
+  <!-- ══ RIGHT: TIMERS + OUTPUTS + LOG ══ -->
+  <div class="right-col">
+
+    <!-- TIMERS -->
+    <div class="panel" style="flex-shrink:0;">
+      <div class="ph">
+        <div class="ph-dot" style="background:var(--yellow);box-shadow:0 0 5px var(--yellow);"></div>
+        <div class="ph-title">Temporizadores</div>
+      </div>
+      <div class="timers-wrap">
+        <div class="timer-card">
+          <div class="timer-name">T_PURGE</div>
+          <svg class="ring-svg" width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="22" fill="none" stroke="#0e2538" stroke-width="5"/>
+            <circle id="r-purge" cx="28" cy="28" r="22" fill="none" stroke="var(--cyan)"
+                    stroke-width="5" stroke-linecap="round"
+                    stroke-dasharray="138.2" stroke-dashoffset="138.2"
+                    transform="rotate(-90 28 28)"/>
+            <text x="28" y="33" text-anchor="middle" font-family="Share Tech Mono" font-size="12" fill="var(--cyan)" id="rt-purge">60</text>
+          </svg>
+          <div class="timer-val" id="tv-purge">60s</div>
+          <div class="timer-sub">TOTAL 60s</div>
+          <div class="timer-done" id="td-purge">✓ DONE</div>
+        </div>
+        <div class="timer-card">
+          <div class="timer-name">T_IGN</div>
+          <svg class="ring-svg" width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="22" fill="none" stroke="#0e2538" stroke-width="5"/>
+            <circle id="r-ign" cx="28" cy="28" r="22" fill="none" stroke="var(--yellow)"
+                    stroke-width="5" stroke-linecap="round"
+                    stroke-dasharray="138.2" stroke-dashoffset="138.2"
+                    transform="rotate(-90 28 28)"/>
+            <text x="28" y="33" text-anchor="middle" font-family="Share Tech Mono" font-size="12" fill="var(--yellow)" id="rt-ign">5</text>
+          </svg>
+          <div class="timer-val" id="tv-ign" style="color:var(--yellow);">5s</div>
+          <div class="timer-sub">TRIAL 5s</div>
+          <div class="timer-done" id="td-ign" style="color:var(--yellow);">✓ DONE</div>
+        </div>
+        <div class="timer-card">
+          <div class="timer-name">T_FLAME</div>
+          <svg class="ring-svg" width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="22" fill="none" stroke="#0e2538" stroke-width="5"/>
+            <circle id="r-flame" cx="28" cy="28" r="22" fill="none" stroke="var(--green)"
+                    stroke-width="5" stroke-linecap="round"
+                    stroke-dasharray="138.2" stroke-dashoffset="138.2"
+                    transform="rotate(-90 28 28)"/>
+            <text x="28" y="33" text-anchor="middle" font-family="Share Tech Mono" font-size="12" fill="var(--green)" id="rt-flame">3</text>
+          </svg>
+          <div class="timer-val" id="tv-flame">3s</div>
+          <div class="timer-sub">PROVING 3s</div>
+          <div class="timer-done" id="td-flame">✓ DONE</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OUTPUTS -->
+    <div class="panel" style="flex:1;min-height:0;">
+      <div class="ph">
+        <div class="ph-dot" style="background:var(--green);box-shadow:0 0 5px var(--green);"></div>
+        <div class="ph-title">Saídas Digitais</div>
+      </div>
+      <div class="out-scroll">
+        <div class="output-row"><span class="out-label">Master Permissive</span><span class="out-state off" id="o-MASTER_PERMISSIVE">OFF</span></div>
+        <div class="output-row"><span class="out-label">Purge Ativo</span><span class="out-state off" id="o-PURGE_ACTIVE">OFF</span></div>
+        <div class="output-row"><span class="out-label">Purge Completo</span><span class="out-state off" id="o-PURGE_COMPLETE">OFF</span></div>
+        <div class="output-row"><span class="out-label">Válvula Piloto XV-301</span><span class="out-state off" id="o-PILOT_GAS_VALVE">OFF</span></div>
+        <div class="output-row"><span class="out-label">Transf. Ignição</span><span class="out-state off" id="o-IGNITION_TRANSFORMER">OFF</span></div>
+        <div class="output-row"><span class="out-label">Chama Piloto OK</span><span class="out-state off" id="o-PILOT_FLAME_OK">OFF</span></div>
+        <div class="output-row"><span class="out-label">Válvula Princ. XV-401</span><span class="out-state off" id="o-MAIN_FUEL_VALVE">OFF</span></div>
+        <div class="output-row"><span class="out-label" style="color:var(--red);">Master Trip</span><span class="out-state off" id="o-MASTER_TRIP">OFF</span></div>
+        <div class="output-row"><span class="out-label" style="color:var(--orange);">Alarme Falha Chama</span><span class="out-state off" id="o-ALARM_FLAME_FAIL">OFF</span></div>
+        <div class="output-row"><span class="out-label" style="color:var(--orange);">Alarme Falha Ignição</span><span class="out-state off" id="o-ALARM_IGNITION_FAIL">OFF</span></div>
+      </div>
+    </div>
+
+    <!-- EVENT LOG -->
+    <div class="panel" style="flex-shrink:0;">
+      <div class="ph">
+        <div class="ph-dot" style="background:var(--orange);box-shadow:0 0 5px var(--orange);"></div>
+        <div class="ph-title">Event Log</div>
+        <span style="margin-left:auto;font-size:8px;color:var(--dimtxt);cursor:pointer;" onclick="clearLog()">CLR</span>
+      </div>
+      <div class="log-scroll" id="alarm-list"></div>
+      <div class="stamp">
+        <div class="stamp-badge">IF</div>
+        <div>
+          <div class="stamp-name">IDERLAN FREITAS</div>
+          <div class="stamp-sub">BMS · ABB 800xA · SCADA · IEC 61131</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /right-col -->
+</div><!-- /main -->
+
+<script>
+const PH = {STANDBY:0,CHECK:1,PURGE:2,OPEN_PIL:3,IGN:4,PROVING:5,RUNNING:6,TRIP:7};
+const s = {
+  E_STOP_OK:true,AIR_PRESSURE_OK:true,AIR_FLOW_OK:true,
+  LOW_WATER_OK:true,PILOT_GAS_PRESSURE_OK:true,MAIN_FUEL_PRESSURE_OK:true,
+  DAMPER_OPEN_OK:true,FAN_RUNNING:true,
+  UV_FLAME_DETECTED:false,FALSE_FLAME:false,
+  MASTER_PERMISSIVE:false,
+  PURGE_ACTIVE:false,PURGE_COMPLETE:false,
+  PILOT_GAS_VALVE:false,IGNITION_TRANSFORMER:false,
+  PILOT_FLAME_OK:false,MAIN_FUEL_VALVE:false,
+  MASTER_TRIP:false,ALARM_FLAME_FAIL:false,ALARM_IGNITION_FAIL:false,
+  phase:0,startCmd:false,
+};
+const tmr    ={purge:60,ign:5,flame:3};
+const tmrMax ={purge:60,ign:5,flame:3};
+const tmrOn  ={purge:false,ign:false,flame:false};
+const tmrDone={purge:false,ign:false,flame:false};
+let lastT=performance.now();
+
+function scan(){
+  const now=performance.now(); const dt=(now-lastT)/1000; lastT=now;
+  ['purge','ign','flame'].forEach(t=>{
+    if(tmrOn[t]&&!tmrDone[t]){tmr[t]-=dt;if(tmr[t]<=0){tmr[t]=0;tmrDone[t]=true;tmrOn[t]=false;}}
+  });
+  s.MASTER_PERMISSIVE=s.E_STOP_OK&&s.AIR_PRESSURE_OK&&s.AIR_FLOW_OK&&
+    s.LOW_WATER_OK&&s.PILOT_GAS_PRESSURE_OK&&s.MAIN_FUEL_PRESSURE_OK&&
+    s.DAMPER_OPEN_OK&&s.FAN_RUNNING&&!s.FALSE_FLAME&&!s.MASTER_TRIP;
+  if(s.MASTER_PERMISSIVE&&s.startCmd&&s.phase===PH.CHECK){
+    s.PURGE_ACTIVE=true;
+    if(!tmrOn.purge&&!tmrDone.purge){tmrOn.purge=true;tmr.purge=tmrMax.purge;s.phase=PH.PURGE;log('info','Purge iniciado — 60s');}
+  }
+  if(tmrDone.purge&&s.phase===PH.PURGE){s.PURGE_COMPLETE=true;s.PURGE_ACTIVE=false;s.phase=PH.OPEN_PIL;log('ok','Purge completo');}
+  if(s.PURGE_COMPLETE&&s.MASTER_PERMISSIVE&&s.phase===PH.OPEN_PIL){s.PILOT_GAS_VALVE=true;s.phase=PH.IGN;log('info','XV-301 aberta — gas piloto');}
+  if(s.PILOT_GAS_VALVE&&s.phase===PH.IGN){
+    s.IGNITION_TRANSFORMER=true;
+    if(!tmrOn.ign&&!tmrDone.ign){tmrOn.ign=true;tmr.ign=tmrMax.ign;log('info','Ignicao ativa — trial 5s');}
+  }
+  if(s.UV_FLAME_DETECTED&&s.phase===PH.IGN){
+    if(!tmrOn.flame&&!tmrDone.flame){tmrOn.flame=true;tmr.flame=tmrMax.flame;s.phase=PH.PROVING;log('info','UV chama detectada — proving 3s');}
+  }
+  if(tmrDone.flame&&s.phase===PH.PROVING){s.PILOT_FLAME_OK=true;s.IGNITION_TRANSFORMER=false;s.phase=PH.OPEN_PIL;log('ok','Chama piloto provada');}
+  if(tmrDone.ign&&s.phase===PH.IGN&&!s.UV_FLAME_DETECTED&&!s.PILOT_FLAME_OK){s.MASTER_TRIP=true;s.ALARM_IGNITION_FAIL=true;log('alarm','FALHA IGNICAO');}
+  if(s.PILOT_FLAME_OK&&s.MAIN_FUEL_PRESSURE_OK&&!s.MAIN_FUEL_VALVE&&!s.MASTER_TRIP){s.MAIN_FUEL_VALVE=true;s.phase=PH.RUNNING;log('ok','XV-401 aberta — QUEIMA NORMAL');}
+  if(s.MAIN_FUEL_VALVE&&!s.UV_FLAME_DETECTED&&!s.MASTER_TRIP){s.MASTER_TRIP=true;s.ALARM_FLAME_FAIL=true;log('alarm','FALHA CHAMA — perda em operacao!');}
+  if(!s.MASTER_PERMISSIVE&&s.phase>=2&&!s.MASTER_TRIP){
+    s.MASTER_TRIP=true;
+    if(!s.E_STOP_OK)log('alarm','TRIP — E-STOP acionado!');
+    else if(!s.AIR_PRESSURE_OK)log('alarm','TRIP — Perda pressao ar!');
+    else if(!s.AIR_FLOW_OK)log('alarm','TRIP — Perda fluxo ar!');
+    else if(!s.LOW_WATER_OK)log('alarm','TRIP — Nivel baixo caldeira!');
+    else if(!s.PILOT_GAS_PRESSURE_OK)log('alarm','TRIP — Perda pressao gas piloto!');
+    else if(!s.MAIN_FUEL_PRESSURE_OK)log('alarm','TRIP — Perda pressao combustivel!');
+    else if(!s.DAMPER_OPEN_OK)log('alarm','TRIP — Damper fechou!');
+    else if(!s.FAN_RUNNING)log('alarm','TRIP — Ventilador parou!');
+    else log('alarm','TRIP — Perda de permissiva!');
+  }
+  if(s.MASTER_TRIP){
+    s.PILOT_GAS_VALVE=false;s.MAIN_FUEL_VALVE=false;s.IGNITION_TRANSFORMER=false;
+    s.PURGE_ACTIVE=false;s.PURGE_COMPLETE=false;s.PILOT_FLAME_OK=false;s.startCmd=false;
+    if(s.phase!==PH.TRIP)s.phase=PH.TRIP;
+  }
+  draw(); requestAnimationFrame(scan);
+}
+
+function draw(){
+  document.getElementById('clock').textContent=new Date().toTimeString().slice(0,8);
+  const names=['STANDBY','VERIFICANDO','PURGE','ABRINDO PILOTO','IGNICAO','FLAME PROVING','QUEIMA NORMAL','*** TRIP ***'];
+  const colors=[null,null,'var(--yellow)',null,'var(--orange)','var(--orange)','var(--green)','var(--red)'];
+  const ss=document.getElementById('sys-state');
+  ss.textContent=names[s.phase]||'STANDBY';
+  ss.style.color=colors[s.phase]||(s.MASTER_PERMISSIVE?'var(--green)':'var(--cyan)');
+  ss.style.borderColor=s.phase===PH.TRIP?'rgba(255,34,68,.5)':s.phase===PH.RUNNING?'rgba(0,255,136,.4)':'rgba(0,207,255,.3)';
+  ss.style.background=s.phase===PH.TRIP?'rgba(255,34,68,.15)':s.phase===PH.RUNNING?'rgba(0,255,136,.1)':'rgba(0,207,255,.08)';
+  ['E_STOP_OK','AIR_PRESSURE_OK','AIR_FLOW_OK','LOW_WATER_OK','PILOT_GAS_PRESSURE_OK','MAIN_FUEL_PRESSURE_OK','DAMPER_OPEN_OK','FAN_RUNNING','UV_FLAME_DETECTED'].forEach(k=>{
+    el('led-'+k).className='led '+(s[k]?'on':'off');
+  });
+  el('led-FALSE_FLAME').className='led '+(s.FALSE_FLAME?'red':'off');
+  el('led-MASTER_PERMISSIVE').className='led '+(s.MASTER_PERMISSIVE?'on pulse':'off');
+  const outMap={MASTER_PERMISSIVE:'o-MASTER_PERMISSIVE',PURGE_ACTIVE:'o-PURGE_ACTIVE',PURGE_COMPLETE:'o-PURGE_COMPLETE',
+    PILOT_GAS_VALVE:'o-PILOT_GAS_VALVE',IGNITION_TRANSFORMER:'o-IGNITION_TRANSFORMER',PILOT_FLAME_OK:'o-PILOT_FLAME_OK',
+    MAIN_FUEL_VALVE:'o-MAIN_FUEL_VALVE',MASTER_TRIP:'o-MASTER_TRIP',ALARM_FLAME_FAIL:'o-ALARM_FLAME_FAIL',ALARM_IGNITION_FAIL:'o-ALARM_IGNITION_FAIL'};
+  Object.entries(outMap).forEach(([k,id])=>{
+    const e=el(id);if(!e)return;
+    const isA=k==='MASTER_TRIP'||k==='ALARM_FLAME_FAIL'||k==='ALARM_IGNITION_FAIL';
+    if(s[k]){e.className='out-state '+(isA?'trip':'on');e.textContent=isA?'ALARM':'ON';}
+    else{e.className='out-state off';e.textContent='OFF';}
+  });
+  updTimer('purge',tmr.purge,tmrMax.purge,tmrDone.purge);
+  updTimer('ign',  tmr.ign,  tmrMax.ign,  tmrDone.ign);
+  updTimer('flame',tmr.flame,tmrMax.flame,tmrDone.flame);
+  for(let i=0;i<=7;i++){
+    const e=el('step-'+i);if(!e)continue;
+    if(s.phase===PH.TRIP){e.className=i===7?'step fail':'step';}
+    else if(i===7){e.className='step';}
+    else if(s.phase>i){e.className='step done';}
+    else if(s.phase===i){e.className='step active';}
+    else{e.className='step';}
+  }
+  drawMimic();
+  el('btn-start').disabled=s.startCmd||s.MASTER_TRIP||s.phase>=PH.PURGE;
+  el('btn-reset').disabled=!s.MASTER_TRIP&&s.phase===PH.STANDBY;
+}
+
+function updTimer(name,rem,tot,done){
+  const circ=138.2;
+  const offset=circ-(1-(rem/tot))*circ;
+  const r=el('r-'+name),rt=el('rt-'+name),tv=el('tv-'+name),td=el('td-'+name);
+  if(r)r.setAttribute('stroke-dashoffset',offset);
+  if(rt)rt.textContent=Math.ceil(rem);
+  if(tv)tv.textContent=Math.ceil(rem)+'s';
+  if(td)td.className='timer-done'+(done?' show':'');
+}
+
+function drawMimic(){
+  const gasOn=s.PILOT_GAS_VALVE,fuelOn=s.MAIN_FUEL_VALVE,airOn=s.FAN_RUNNING;
+  sp('p-gas-in',gasOn?'var(--orange)':'#1a3040');sp('p-pil',gasOn?'var(--orange)':'#1a3040');sp('p-pil2',gasOn?'var(--orange)':'#1a3040');
+  sp('p-fuel-in',fuelOn?'var(--orange)':'#1a3040');sp('p-main',fuelOn?'var(--orange)':'#1a3040');
+  sp('p-air',airOn?'var(--cyan)':'#1a3040');sp('p-air2',airOn?'var(--cyan)':'#1a3040');sp('p-air-in',airOn?'var(--cyan)':'#1a3040');sp('p-air-in2',airOn?'var(--cyan)':'#1a3040');
+  sp('p-exhaust',fuelOn?'var(--orange)':'#1a3040');
+  sa('v-pil1','stroke',gasOn?'var(--green)':'var(--red)');sa('v-pil1','fill',gasOn?'rgba(0,255,136,.2)':'rgba(255,34,68,.1)');
+  sa('v-pil2','stroke',gasOn?'var(--green)':'var(--red)');sa('v-pil2','fill',gasOn?'rgba(0,255,136,.2)':'rgba(255,34,68,.1)');
+  sa('v-pil-act','stroke',gasOn?'var(--green)':'#1a3040');sa('v-pil-act','fill',gasOn?'rgba(0,255,136,.25)':'var(--panel)');
+  sa('v-pil-stem','stroke',gasOn?'var(--green)':'#1a3040');
+  sa('v-main1','stroke',fuelOn?'var(--orange)':'var(--red)');sa('v-main1','fill',fuelOn?'rgba(255,140,0,.2)':'rgba(255,34,68,.1)');
+  sa('v-main2','stroke',fuelOn?'var(--orange)':'var(--red)');sa('v-main2','fill',fuelOn?'rgba(255,140,0,.2)':'rgba(255,34,68,.1)');
+  sa('v-main-act','stroke',fuelOn?'var(--orange)':'#1a3040');sa('v-main-act','fill',fuelOn?'rgba(255,140,0,.25)':'var(--panel)');
+  sa('v-main-stem','stroke',fuelOn?'var(--orange)':'#1a3040');
+  sa('fan-c','stroke',airOn?'var(--cyan)':'#1a3040');sa('fan-t','fill',airOn?'var(--cyan)':'#1a3040');
+  sa('dam-r','stroke',s.DAMPER_OPEN_OK?'var(--cyan)':'#1a3040');sa('dam-l','stroke',s.DAMPER_OPEN_OK?'var(--cyan)':'#1a3040');
+  el('dam-l').setAttribute('transform',s.DAMPER_OPEN_OK?'rotate(40 512 131)':'');
+  sa('burner','stroke',fuelOn?'var(--orange)':'#1e3a50');sa('burner','fill',fuelOn?'rgba(255,100,0,.07)':'rgba(7,13,20,.8)');
+  el('fl-pil').className.baseVal=(gasOn&&s.UV_FLAME_DETECTED)?'flame-on':'flame-off';
+  el('fl-main').className.baseVal=fuelOn?'flame-on':'flame-off';
+  const sp2=el('spark');
+  sp2.setAttribute('opacity',s.IGNITION_TRANSFORMER?'1':'0');
+  sp2.style.animation=s.IGNITION_TRANSFORMER?'pulse .2s ease-in-out infinite':'';
+  sa('uv-b','stroke',s.UV_FLAME_DETECTED?'var(--purple)':'#304d62');
+  sa('uv-b','stroke-width',s.UV_FLAME_DETECTED?'2':'1');
+}
+
+function sp(id,color){const e=el(id);if(e)e.setAttribute('stroke',color);}
+function sa(id,attr,val){const e=el(id);if(e)e.setAttribute(attr,val);}
+function el(id){return document.getElementById(id);}
+
+function cmdStart(){
+  if(s.MASTER_TRIP||s.startCmd)return;
+  if(!s.MASTER_PERMISSIVE){log('warn','Partida bloqueada — verifique permissivas');return;}
+  ['purge','ign','flame'].forEach(t=>{tmr[t]=tmrMax[t];tmrOn[t]=false;tmrDone[t]=false;});
+  s.startCmd=true;s.phase=PH.CHECK;log('info','Comando START recebido');
+}
+function cmdReset(){
+  s.E_STOP_OK=true;s.AIR_PRESSURE_OK=true;s.AIR_FLOW_OK=true;
+  s.LOW_WATER_OK=true;s.PILOT_GAS_PRESSURE_OK=true;s.MAIN_FUEL_PRESSURE_OK=true;
+  s.DAMPER_OPEN_OK=true;s.FAN_RUNNING=true;s.FALSE_FLAME=false;s.UV_FLAME_DETECTED=false;
+  s.MASTER_TRIP=false;s.ALARM_FLAME_FAIL=false;s.ALARM_IGNITION_FAIL=false;
+  s.PURGE_COMPLETE=false;s.PILOT_FLAME_OK=false;s.startCmd=false;s.phase=PH.STANDBY;
+  ['purge','ign','flame'].forEach(t=>{tmr[t]=tmrMax[t];tmrOn[t]=false;tmrDone[t]=false;});
+  log('ok','Sistema RESETADO — aguardando START');
+}
+function cmdTrip(){s.MASTER_TRIP=true;log('alarm','TRIP MANUAL acionado');}
+function tog(key){s[key]=!s[key];log('info',key.replace(/_/g,' ')+' → '+(s[key]?'TRUE':'FALSE'));}
+
+const logs=[];
+function log(type,msg){
+  if(logs.length&&logs[0].msg===msg)return;
+  logs.unshift({type,msg,time:new Date().toTimeString().slice(0,8)});
+  if(logs.length>20)logs.pop();
+  el('alarm-list').innerHTML=logs.map(e=>
+    `<div class="alarm-item ${e.type}"><div class="alarm-dot"></div><span class="alarm-time">${e.time}</span><span>${e.msg}</span></div>`
+  ).join('');
+}
+function clearLog(){logs.length=0;el('alarm-list').innerHTML='';}
+
+// DEMO AUTO
+let demoTimers=[];
+function demoDelay(ms,fn){const t=setTimeout(fn,ms);demoTimers.push(t);return t;}
+function demoWaitPhase(ph,cb){
+  const c=setInterval(()=>{if(s.phase===ph){clearInterval(c);cb();}},300);
+}
+function startDemo(){
+  demoTimers.forEach(t=>clearTimeout(t));demoTimers=[];
+  demoDelay(2000,()=>{log('info','[DEMO] Iniciando sequencia...');cmdStart();});
+  demoDelay(2500,()=>{demoWaitPhase(PH.IGN,()=>{demoDelay(2000,()=>{
+    if(s.phase===PH.IGN||s.phase===PH.PROVING){s.UV_FLAME_DETECTED=true;log('info','[DEMO] BE-701 — UV chama detectada');}
+  });});});
+  demoDelay(3000,()=>{demoWaitPhase(PH.RUNNING,()=>{demoDelay(15000,()=>{
+    if(s.phase===PH.RUNNING){log('warn','[DEMO] Queda pressao ar...');s.AIR_PRESSURE_OK=false;}
+  });});});
+  demoDelay(3500,()=>{demoWaitPhase(PH.TRIP,()=>{demoDelay(4000,()=>{
+    log('info','[DEMO] Reset automatico...');cmdReset();demoDelay(3000,()=>startDemo());
+  });});});
+}
+
+log('info','BMS-001 — Sistema iniciado');
+log('ok','Todas permissivas OK');
+log('info','[DEMO] Modo automatico — iniciando em 3s...');
+requestAnimationFrame(scan);
+setTimeout(()=>startDemo(),3000);
+</script>
+</body>
+</html>

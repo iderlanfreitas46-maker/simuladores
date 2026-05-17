@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Bombas Alternadas — AC 800M</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+:root{
+  --bg:#f0f4f8;--panel:#fff;--panel2:#eef2f7;
+  --border:#ccd6e0;--border2:#a0b4c8;
+  --green:#00954a;--cyan:#0069bb;--yellow:#c88000;
+  --orange:#c05000;--red:#b82000;
+  --blue:#1255a0;--dimtxt:#7a90a4;
+  --txt:#3a4e60;--txthi:#18283a;
+  --sh:0 2px 8px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--txt);padding-bottom:76px;}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;height:50px;background:#182838;
+  border-bottom:3px solid #3a90d0;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.2);}
+.logo{display:flex;align-items:center;gap:10px;}
+.lb{width:32px;height:32px;border-radius:4px;background:linear-gradient(135deg,#1255a0,#2080d0);
+  border:2px solid #60b0f0;display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:11px;font-weight:900;color:#fff;}
+.lt{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:2px;color:#90c8f0;}
+.ls{font-size:7px;color:#6090a8;letter-spacing:1px;}
+.tr{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
+#clock{font-family:'Share Tech Mono',monospace;font-size:13px;color:#90c8f0;letter-spacing:1px;}
+.ss{font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 10px;border-radius:10px;
+  background:rgba(144,200,240,0.12);border:1px solid rgba(144,200,240,0.35);color:#90c8f0;transition:all .3s;}
+
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;margin:8px;overflow:hidden;box-shadow:var(--sh);}
+.ch{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--panel2);
+  border-bottom:1px solid var(--border);cursor:pointer;user-select:none;}
+.cd{width:8px;height:8px;border-radius:50%;}
+.ct{font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:2px;color:var(--txthi);text-transform:uppercase;}
+.ca{margin-left:auto;font-size:10px;color:var(--dimtxt);transition:transform .3s;}
+.collapsed .cb{display:none;}.collapsed .ca{transform:rotate(-90deg);}
+
+.banner{background:var(--panel);border:1px solid var(--border);border-radius:8px;margin:8px;
+  padding:10px 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--sh);}
+.bl{font-size:8px;color:var(--dimtxt);letter-spacing:1px;font-family:'Orbitron',sans-serif;}
+.bv{font-family:'Share Tech Mono',monospace;font-size:14px;font-weight:700;}
+.demo-badge{font-family:'Share Tech Mono',monospace;font-size:8px;padding:2px 8px;border-radius:10px;
+  background:rgba(200,128,0,0.12);border:1px solid var(--yellow);color:var(--yellow);letter-spacing:1px;animation:blink 2s infinite;}
+
+.lw{padding:14px;}
+.lbb{width:100%;height:30px;background:#dde6f0;border:1px solid var(--border2);border-radius:6px;overflow:hidden;position:relative;}
+.lbf{height:100%;border-radius:6px;transition:width .5s ease;}
+.lm{display:flex;justify-content:space-between;margin-top:5px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dimtxt);}
+.lpct{text-align:center;margin-top:6px;font-family:'Share Tech Mono',monospace;font-size:26px;font-weight:700;color:var(--blue);}
+.lma{font-size:11px;color:var(--dimtxt);text-align:center;margin-top:2px;}
+
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;}
+.sc{background:var(--panel2);border:2px solid var(--border);border-radius:6px;padding:8px;text-align:center;transition:all .3s;}
+.sn{font-size:8px;color:var(--dimtxt);letter-spacing:1px;margin-bottom:3px;font-family:'Orbitron',sans-serif;}
+.sv{font-family:'Share Tech Mono',monospace;font-size:20px;font-weight:700;}
+.su{font-size:9px;color:var(--dimtxt);}
+.sc.active{border-color:var(--cyan);background:#e0f0ff;}
+.sc.alarm {border-color:var(--red);background:#ffeae6;animation:blink .6s infinite;}
+
+.pr{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;}
+.pc{background:var(--panel2);border:2px solid var(--border);border-radius:8px;padding:10px;text-align:center;transition:all .4s;}
+.pc.running{border-color:var(--green);background:#e6f9ef;box-shadow:0 0 14px rgba(0,149,74,0.18);}
+.pc.standby-run{border-color:var(--yellow);background:#fff8e0;}
+.pc.fault{border-color:var(--red);background:#ffeae6;animation:blink .5s infinite;}
+.pc.principal{border-color:var(--cyan);background:#e0f0ff;}
+.ptag{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px;color:var(--txthi);margin-bottom:6px;font-weight:700;}
+.psb{font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 12px;border-radius:10px;
+  display:inline-block;margin-top:5px;font-weight:700;letter-spacing:1px;}
+.soff{background:#e8edf4;color:#8898aa;border:1px solid #c8d4e0;}
+.srun{background:#c0f0d8;color:var(--green);border:1px solid var(--green);}
+.sfault{background:#ffd0c8;color:var(--red);border:1px solid var(--red);animation:blink .5s infinite;}
+.sstdby{background:#fff0c0;color:var(--yellow);border:1px solid var(--yellow);}
+.prole{font-size:10px;color:var(--dimtxt);margin-top:4px;}.prole.pr2{color:var(--cyan);font-weight:700;}
+.phours{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dimtxt);margin-top:3px;}
+
+.pipe-row{display:flex;align-items:center;padding:0 18px;}
+.pipe-h{height:8px;flex:1;background:#c8d8e8;border-radius:2px;transition:background .4s;}
+.pipe-h.flow{background:var(--cyan);animation:fp .8s linear infinite;}
+.pa{font-size:13px;color:var(--dimtxt);flex-shrink:0;margin:0 6px;}
+@keyframes fp{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+.alt-row{display:flex;align-items:center;justify-content:center;gap:12px;padding:8px;}
+.adot{width:12px;height:12px;border-radius:50%;border:2px solid var(--border2);transition:all .4s;}
+.adot.on{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 6px rgba(0,105,187,0.4);}
+.adot.off2{background:#dde6f0;}
+
+.ir{display:flex;align-items:center;justify-content:space-between;
+  padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}
+.ir:active{background:var(--panel2);}
+.il{font-size:12px;color:var(--txthi);font-weight:600;}
+.itg{font-size:9px;color:var(--dimtxt);font-family:'Share Tech Mono',monospace;}
+.led{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:2px solid var(--border);transition:all .3s;}
+.led.on   {background:var(--green);border-color:var(--green);box-shadow:0 0 6px rgba(0,149,74,.4);}
+.led.off  {background:#dde6f0;border-color:var(--border2);}
+.led.red  {background:var(--red);border-color:var(--red);box-shadow:0 0 6px rgba(184,32,0,.4);animation:blink .5s infinite;}
+.led.amber{background:var(--yellow);border-color:var(--yellow);}
+
+.or{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--border);}
+.ol{font-size:11px;font-weight:600;color:var(--txt);}
+.os{font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 10px;border-radius:10px;font-weight:700;}
+.os.on  {background:#c0f0d8;color:var(--green);border:1px solid var(--green);}
+.os.off {background:#e8edf4;color:var(--dimtxt);border:1px solid var(--border);}
+.os.trip{background:#ffd0c8;color:var(--red);border:1px solid var(--red);animation:blink .5s infinite;}
+
+.li{display:flex;align-items:center;gap:8px;padding:6px 14px;border-bottom:1px solid var(--border);
+  font-family:'Share Tech Mono',monospace;font-size:10px;}
+.li.alarm{color:var(--red);}.li.warn{color:var(--orange);}.li.ok{color:var(--green);}.li.info{color:var(--blue);}
+.ld2{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.li.alarm .ld2{background:var(--red);}.li.warn .ld2{background:var(--orange);}
+.li.ok .ld2{background:var(--green);}.li.info .ld2{background:var(--blue);}
+.lt2{color:var(--dimtxt);flex-shrink:0;font-size:9px;}
+
+.ctrl-bar{position:fixed;bottom:0;left:0;right:0;display:flex;gap:8px;padding:8px 10px;
+  background:rgba(24,40,56,.97);border-top:2px solid #3a90d0;z-index:200;}
+.btn{flex:1;font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:1px;
+  padding:9px 4px;border-radius:6px;cursor:pointer;border:none;text-transform:uppercase;font-weight:700;color:#fff;transition:opacity .2s;}
+.btn:active{opacity:.8;}
+.btn-auto{background:var(--green);}
+.btn-reset{background:var(--cyan);}
+.btn-b1f{background:var(--red);}
+.btn-b2f{background:var(--orange);}
+
+.stamp{display:flex;align-items:center;gap:10px;margin:8px;padding:8px 14px;
+  background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh);}
+.sbg{width:26px;height:26px;border-radius:4px;background:linear-gradient(135deg,#1255a0,#2080d0);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:10px;font-weight:900;color:#fff;flex-shrink:0;}
+.sn2{font-family:'Orbitron',sans-serif;font-size:9px;color:var(--txthi);letter-spacing:2px;font-weight:700;}
+.ss2{font-size:8px;color:var(--dimtxt);letter-spacing:1px;}
+
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
+
+/* ═══ DESKTOP LAYOUT ═══ */
+@media (min-width: 900px) {
+  body{padding-bottom:0;overflow:hidden;height:100vh;}
+  .topbar{height:44px;}
+
+  /* esconde mobile */
+  .card,.banner,.stamp,.ctrl-bar{display:none!important;}
+
+  /* grid */
+  .desk{
+    display:grid;
+    grid-template-columns:200px 1fr 220px;
+    grid-template-rows:1fr 40px;
+    gap:5px;padding:5px;
+    height:calc(100vh - 44px);
+  }
+  .dcol{display:flex;flex-direction:column;gap:5px;overflow:hidden;}
+  .dpanel{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:6px;overflow:hidden;box-shadow:var(--sh);
+    display:flex;flex-direction:column;
+  }
+  .dpanel.grow{flex:1;min-height:0;}
+  .dph{
+    display:flex;align-items:center;gap:7px;
+    padding:5px 10px;background:var(--panel2);
+    border-bottom:1px solid var(--border);flex-shrink:0;
+  }
+  .dcd{width:7px;height:7px;border-radius:50%;}
+  .dct{font-family:'Orbitron',sans-serif;font-size:7px;letter-spacing:2px;color:var(--txthi);text-transform:uppercase;}
+  .dscroll{overflow-y:auto;flex:1;}
+  .dscroll::-webkit-scrollbar{width:3px;}
+  .dscroll::-webkit-scrollbar-thumb{background:#c0d0e0;}
+
+  /* compact rows */
+  .d-ir{display:flex;align-items:center;justify-content:space-between;
+    padding:5px 10px;border-bottom:1px solid var(--border);cursor:pointer;}
+  .d-or{display:flex;align-items:center;justify-content:space-between;padding:4px 10px;border-bottom:1px solid var(--border);}
+  .d-li{display:flex;align-items:center;gap:7px;padding:3px 10px;border-bottom:1px solid var(--border);
+    font-family:'Share Tech Mono',monospace;font-size:9px;}
+  .d-li.alarm{color:var(--red);}.d-li.warn{color:var(--orange);}.d-li.ok{color:var(--green);}.d-li.info{color:var(--blue);}
+  .d-ld{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+  .d-li.alarm .d-ld{background:var(--red);}.d-li.warn .d-ld{background:var(--orange);}
+  .d-li.ok .d-ld{background:var(--green);}.d-li.info .d-ld{background:var(--blue);}
+  .d-lt{color:var(--dimtxt);flex-shrink:0;font-size:8px;}
+
+  .dil{font-size:11px;color:var(--txthi);font-weight:600;}
+  .ditg{font-size:8px;color:var(--dimtxt);font-family:'Share Tech Mono',monospace;}
+  .dol{font-size:10px;font-weight:600;color:var(--txt);}
+  .dos{font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;border-radius:8px;font-weight:700;}
+  .dos.on  {background:#c0f0d8;color:var(--green);border:1px solid var(--green);}
+  .dos.off {background:#e8edf4;color:var(--dimtxt);border:1px solid var(--border);}
+  .dos.trip{background:#ffd0c8;color:var(--red);border:1px solid var(--red);animation:blink .5s infinite;}
+
+  /* SP compact */
+  .d-sg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:6px;}
+  .d-sc{background:var(--panel2);border:2px solid var(--border);border-radius:4px;padding:5px;text-align:center;transition:all .3s;}
+  .d-sn{font-size:7px;color:var(--dimtxt);letter-spacing:1px;font-family:'Orbitron',sans-serif;}
+  .d-sv{font-family:'Share Tech Mono',monospace;font-size:16px;font-weight:700;}
+  .d-su{font-size:8px;color:var(--dimtxt);}
+  .d-sc.active{border-color:var(--cyan);background:#e0f0ff;}
+  .d-sc.alarm{border-color:var(--red);background:#ffeae6;animation:blink .6s infinite;}
+
+  /* bombas desktop */
+  .d-pr{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px;}
+  .d-pc{background:var(--panel2);border:2px solid var(--border);border-radius:6px;padding:6px;text-align:center;transition:all .4s;}
+  .d-pc.running{border-color:var(--green);background:#e6f9ef;}
+  .d-pc.standby-run{border-color:var(--yellow);background:#fff8e0;}
+  .d-pc.fault{border-color:var(--red);background:#ffeae6;animation:blink .5s infinite;}
+  .d-pc.principal{border-color:var(--cyan);background:#e0f0ff;}
+  .d-ptag{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:1px;color:var(--txthi);margin-bottom:3px;font-weight:700;}
+  .d-psb{font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;border-radius:8px;display:inline-block;margin-top:3px;font-weight:700;}
+  .d-prole{font-size:9px;color:var(--dimtxt);margin-top:2px;}
+  .d-prole.p2{color:var(--cyan);font-weight:700;}
+  .d-phours{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dimtxt);}
+
+  /* pipe */
+  .d-pipe-row{display:flex;align-items:center;padding:0 10px;}
+  .d-ph{height:7px;flex:1;background:#c8d8e8;border-radius:2px;transition:background .4s;}
+  .d-ph.flow{background:var(--cyan);animation:fp .8s linear infinite;}
+  .d-pa{font-size:11px;color:var(--dimtxt);flex-shrink:0;margin:0 5px;}
+
+  /* alt dots */
+  .d-alt{display:flex;align-items:center;justify-content:center;gap:10px;padding:5px;}
+  .d-adot{width:10px;height:10px;border-radius:50%;border:2px solid var(--border2);transition:all .4s;}
+  .d-adot.on{background:var(--cyan);border-color:var(--cyan);}
+  .d-adot.off2{background:#dde6f0;}
+
+  /* banner desktop */
+  .d-banner{
+    background:var(--panel);border:1px solid var(--border);border-radius:6px;
+    padding:5px 10px;display:flex;align-items:center;justify-content:space-between;
+    flex:1;height:100%;box-shadow:var(--sh);
+  }
+  .d-bl{font-size:7px;color:var(--dimtxt);letter-spacing:1px;font-family:'Orbitron',sans-serif;}
+  .d-bv{font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700;}
+  .d-btns{display:flex;gap:4px;}
+  .d-btn{font-family:'Orbitron',sans-serif;font-size:8px;padding:7px 10px;border-radius:5px;
+    cursor:pointer;border:none;text-transform:uppercase;font-weight:700;color:#fff;white-space:nowrap;}
+  .d-btn:active{opacity:.8;}
+
+  /* stamp desktop */
+  .d-stamp{display:flex;align-items:center;gap:8px;padding:4px 10px;flex-shrink:0;
+    background:var(--panel2);border-top:1px solid var(--border);}
+  .d-sbg{width:22px;height:22px;border-radius:3px;background:linear-gradient(135deg,#1255a0,#2080d0);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Orbitron',sans-serif;font-size:9px;font-weight:900;color:#fff;flex-shrink:0;}
+  .d-sn{font-family:'Orbitron',sans-serif;font-size:8px;color:var(--txthi);letter-spacing:2px;font-weight:700;}
+  .d-ss{font-size:7px;color:var(--dimtxt);}
+
+  /* tanque desktop compacto */
+  .d-tank-svg{width:90%;max-width:300px;display:block;margin:0 auto;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="lb">IF</div>
+    <div><div class="lt">IDERLAN FREITAS</div><div class="ls">AC 800M · S800 I/O · IEC 61131-3</div></div>
+  </div>
+  <div class="tr">
+    <div id="clock">00:00:00</div>
+    <div class="ss" id="sys-state">STANDBY</div>
+  </div>
+</div>
+
+
+<!-- ═══ LAYOUT DESKTOP (>900px) ═══ -->
+<div class="desk">
+
+<!-- COL 1: ENTRADAS + SETPOINTS -->
+<div class="dcol" style="grid-column:1;grid-row:1/3;">
+  <div class="dpanel grow">
+    <div class="dph"><div class="dcd" style="background:var(--blue);"></div><div class="dct">Entradas Digitais</div></div>
+    <div class="dscroll">
+      <div class="d-ir" onclick="tog('DI_AUTO_MODE')"><div><div class="dil">Modo AUTO</div><div class="ditg">DI_AUTO_MODE</div></div><div class="led on" id="dl-AUTO"></div></div>
+      <div class="d-ir" onclick="tog('DI_B1_RUNNING')"><div><div class="dil">B1 Funcionando</div><div class="ditg">DI_B1_RUNNING</div></div><div class="led off" id="dl-R1"></div></div>
+      <div class="d-ir" onclick="tog('DI_B2_RUNNING')"><div><div class="dil">B2 Funcionando</div><div class="ditg">DI_B2_RUNNING</div></div><div class="led off" id="dl-R2"></div></div>
+      <div class="d-ir" onclick="tog('DI_B1_FAULT')" style="border-top:1px solid var(--border2);"><div><div class="dil" style="color:var(--red);">Falha Bomba 1</div><div class="ditg">DI_B1_FAULT</div></div><div class="led off" id="dl-F1"></div></div>
+      <div class="d-ir" onclick="tog('DI_B2_FAULT')"><div><div class="dil" style="color:var(--red);">Falha Bomba 2</div><div class="ditg">DI_B2_FAULT</div></div><div class="led off" id="dl-F2"></div></div>
+      <div class="d-ir" onclick="cmdReset()" style="border-top:1px solid var(--border2);"><div><div class="dil" style="color:var(--cyan);">Reset Falhas</div><div class="ditg">DI_RESET_FAULT</div></div><div class="led off" id="dl-RST"></div></div>
+    </div>
+  </div>
+  <div class="dpanel" style="flex-shrink:0;">
+    <div class="dph"><div class="dcd" style="background:var(--yellow);"></div><div class="dct">Setpoints</div></div>
+    <div class="d-sg">
+      <div class="d-sc" id="dsp-hh"><div class="d-sn">SP_HH</div><div class="d-sv" style="color:var(--red);">95%</div><div class="d-su">ALARME HH</div></div>
+      <div class="d-sc" id="dsp-h"><div class="d-sn">SP_H</div><div class="d-sv" style="color:var(--green);">80%</div><div class="d-su">LIGA</div></div>
+      <div class="d-sc" id="dsp-l"><div class="d-sn">SP_L</div><div class="d-sv" style="color:var(--yellow);">30%</div><div class="d-su">DESLIGA</div></div>
+      <div class="d-sc" id="dsp-ll"><div class="d-sn">SP_LL</div><div class="d-sv" style="color:var(--red);">10%</div><div class="d-su">ALARME LL</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- COL 2: P&ID + TANQUE -->
+<div class="dcol" style="grid-column:2;grid-row:1;">
+  <div class="dpanel grow" style="min-height:0;">
+    <div class="dph"><div class="dcd" style="background:var(--green);"></div><div class="dct">P&ID — Bombas Alternadas AC 800M</div></div>
+    <div style="flex:1;overflow:hidden;padding:6px;display:flex;flex-direction:column;gap:4px;">
+      <!-- tanque compacto -->
+      <svg id="dt-svg" viewBox="0 0 260 80" class="d-tank-svg" style="flex-shrink:0;">
+        <defs>
+          <linearGradient id="dwg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#64b5f6" stop-opacity=".65"/>
+            <stop offset="100%" stop-color="#1255a0" stop-opacity=".9"/>
+          </linearGradient>
+          <clipPath id="dtc"><rect x="14" y="6" width="182" height="66" rx="3"/></clipPath>
+        </defs>
+        <rect x="12" y="4" width="186" height="70" rx="5" fill="#f0f4f8" stroke="#a0b4c8" stroke-width="2"/>
+        <rect id="dt-liq" x="14" y="70" width="182" height="0" rx="3" fill="url(#dwg)" clip-path="url(#dtc)" style="transition:all .5s;"/>
+        <line x1="12" y1="10" x2="18" y2="10" stroke="#b82000" stroke-width="2"/>
+        <line x1="12" y1="18" x2="18" y2="18" stroke="#c05000" stroke-width="2"/>
+        <line x1="12" y1="53" x2="18" y2="53" stroke="#c88000" stroke-width="2"/>
+        <line x1="12" y1="63" x2="18" y2="63" stroke="#b82000" stroke-width="2"/>
+        <text x="20" y="13"  font-family="monospace" font-size="7" fill="#b82000" font-weight="bold">HH 95%</text>
+        <text x="20" y="21"  font-family="monospace" font-size="7" fill="#c05000">H 80%</text>
+        <text x="20" y="56"  font-family="monospace" font-size="7" fill="#c88000">L 30%</text>
+        <text x="20" y="66"  font-family="monospace" font-size="7" fill="#b82000">LL 10%</text>
+        <text id="dt-pct" x="105" y="44" text-anchor="middle" font-family="Share Tech Mono" font-size="18" font-weight="bold" fill="#1255a0">0%</text>
+        <text id="dt-ma"  x="105" y="56" text-anchor="middle" font-family="Share Tech Mono" font-size="9" fill="#8898aa">4.00 mA</text>
+        <line x1="175" y1="70" x2="175" y2="15" stroke="#90a8b8" stroke-width="1.5" stroke-dasharray="3,2"/>
+        <circle cx="175" cy="15" r="3" fill="none" stroke="#90a8b8" stroke-width="1.5"/>
+        <text x="179" y="18" font-family="monospace" font-size="7" fill="#90a8b8">LT-XXX 4-20mA</text>
+        <rect x="208" y="4" width="40" height="70" rx="4" fill="#e8eef4" stroke="#a0b4c8" stroke-width="1.5"/>
+        <rect id="dt-ma-bar" x="210" y="72" width="36" height="0" rx="3" fill="#42a5f5" style="transition:all .5s;"/>
+        <text x="228" y="14" text-anchor="middle" font-family="monospace" font-size="7" fill="#7a90a4">20mA</text>
+        <text x="228" y="78" text-anchor="middle" font-family="monospace" font-size="7" fill="#7a90a4">4mA</text>
+      </svg>
+
+      <!-- pipe down -->
+      <div class="d-pipe-row">
+        <div class="d-ph" id="dp-dn-l"></div><div class="d-pa">▼</div><div class="d-ph" id="dp-dn-r"></div>
+      </div>
+
+      <!-- bombas -->
+      <div class="d-pr" style="flex:1;min-height:0;">
+        <div class="d-pc" id="dpc1">
+          <div class="d-ptag">BOMBA B1</div>
+          <svg viewBox="0 0 140 80" style="width:100%;max-width:160px;display:block;margin:0 auto 3px;">
+            <rect id="dmb1" x="8" y="18" width="64" height="44" rx="5" fill="#dde8f2" stroke="#8aaccc" stroke-width="2"/>
+            <line x1="18" y1="18" x2="18" y2="62" stroke="#aac4d8" stroke-width="1"/><line x1="26" y1="18" x2="26" y2="62" stroke="#aac4d8" stroke-width="1"/>
+            <line x1="34" y1="18" x2="34" y2="62" stroke="#aac4d8" stroke-width="1"/><line x1="42" y1="18" x2="42" y2="62" stroke="#aac4d8" stroke-width="1"/>
+            <line x1="50" y1="18" x2="50" y2="62" stroke="#aac4d8" stroke-width="1"/><line x1="58" y1="18" x2="58" y2="62" stroke="#aac4d8" stroke-width="1"/>
+            <ellipse cx="72" cy="40" rx="10" ry="22" fill="#c8d8e8" stroke="#8aaccc" stroke-width="2"/>
+            <line id="dsh1" x1="82" y1="40" x2="96" y2="40" stroke="#507090" stroke-width="3" stroke-linecap="round"/>
+            <ellipse id="dbp1" cx="108" cy="40" rx="14" ry="14" fill="#d0e4f4" stroke="#4a80b0" stroke-width="2"/>
+            <path d="M108,26 A14,14 0 1,1 94,40 Q94,54 106,57 Q120,58 122,44" fill="none" stroke="#4a80b0" stroke-width="1.5"/>
+            <rect x="120" y="33" width="6" height="14" rx="2" fill="#a0c0d8" stroke="#4a80b0" stroke-width="1"/>
+            <rect x="96" y="51" width="18" height="6" rx="2" fill="#a0c0d8" stroke="#4a80b0" stroke-width="1"/>
+            <g id="dimp1" transform="translate(108,40)">
+              <line x1="0" y1="-9" x2="0" y2="9" stroke="#2a5878" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="-9" y1="0" x2="9" y2="0" stroke="#2a5878" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="-6" y1="-6" x2="6" y2="6" stroke="#2a5878" stroke-width="2" stroke-linecap="round"/>
+              <line x1="6" y1="-6" x2="-6" y2="6" stroke="#2a5878" stroke-width="2" stroke-linecap="round"/>
+              <circle r="3" fill="#2a5878"/>
+            </g>
+            <rect x="8" y="8" width="22" height="11" rx="2" fill="#c8d4e0" stroke="#8aaccc" stroke-width="1.5"/>
+            <text x="19" y="16" text-anchor="middle" font-family="Orbitron" font-size="6" fill="#507090" font-weight="bold">M</text>
+            <circle id="dled1" cx="54" cy="12" r="5" fill="#dde8f2" stroke="#a0b8cc" stroke-width="1.5"/>
+            <text x="38" y="74" text-anchor="middle" font-family="Share Tech Mono" font-size="7" fill="#507090">B-01 / MOT-B1</text>
+          </svg>
+          <div><span class="d-psb soff" id="dps1">PARADA</span></div>
+          <div class="d-prole" id="dpr1">STAND-BY</div>
+          <div class="d-phours">⏱ <span id="dph1">0.0</span> min</div>
+        </div>
+        <div class="d-pc" id="dpc2">
+          <div class="d-ptag">BOMBA B2</div>
+          <svg viewBox="0 0 140 80" style="width:100%;max-width:160px;display:block;margin:0 auto 3px;">
+            <rect id="dmb2" x="8" y="18" width="64" height="44" rx="5" fill="#dde8f2" stroke="#8aaccc" stroke-width="2"/>
+            <line x1="18" y1="18" x2="18" y2="62" stroke="#aac4d8" stroke-width="1"/><line x1="26" y1="18" x2="26" y2="62" stroke="#aac4d8" stroke-width="1"/>
+            <line x1="34" y1="18" x2="34" y2="62" stroke="#aac4d8" stroke-width="1"/><line x1="42" y1="18" x2="42" y2="62" stroke="#aac4d8" stroke-width="1"/>
+            <line x1="50" y1="18" x2="50" y2="62" stroke="#aac4d8" stroke-width="1"/><line x1="58" y1="18" x2="58" y2="62" stroke="#aac4d8" stroke-width="1"/>
+            <ellipse cx="72" cy="40" rx="10" ry="22" fill="#c8d8e8" stroke="#8aaccc" stroke-width="2"/>
+            <line id="dsh2" x1="82" y1="40" x2="96" y2="40" stroke="#507090" stroke-width="3" stroke-linecap="round"/>
+            <ellipse id="dbp2" cx="108" cy="40" rx="14" ry="14" fill="#d0e4f4" stroke="#4a80b0" stroke-width="2"/>
+            <path d="M108,26 A14,14 0 1,1 94,40 Q94,54 106,57 Q120,58 122,44" fill="none" stroke="#4a80b0" stroke-width="1.5"/>
+            <rect x="120" y="33" width="6" height="14" rx="2" fill="#a0c0d8" stroke="#4a80b0" stroke-width="1"/>
+            <rect x="96" y="51" width="18" height="6" rx="2" fill="#a0c0d8" stroke="#4a80b0" stroke-width="1"/>
+            <g id="dimp2" transform="translate(108,40)">
+              <line x1="0" y1="-9" x2="0" y2="9" stroke="#2a5878" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="-9" y1="0" x2="9" y2="0" stroke="#2a5878" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="-6" y1="-6" x2="6" y2="6" stroke="#2a5878" stroke-width="2" stroke-linecap="round"/>
+              <line x1="6" y1="-6" x2="-6" y2="6" stroke="#2a5878" stroke-width="2" stroke-linecap="round"/>
+              <circle r="3" fill="#2a5878"/>
+            </g>
+            <rect x="8" y="8" width="22" height="11" rx="2" fill="#c8d4e0" stroke="#8aaccc" stroke-width="1.5"/>
+            <text x="19" y="16" text-anchor="middle" font-family="Orbitron" font-size="6" fill="#507090" font-weight="bold">M</text>
+            <circle id="dled2" cx="54" cy="12" r="5" fill="#dde8f2" stroke="#a0b8cc" stroke-width="1.5"/>
+            <text x="38" y="74" text-anchor="middle" font-family="Share Tech Mono" font-size="7" fill="#507090">B-02 / MOT-B2</text>
+          </svg>
+          <div><span class="d-psb soff" id="dps2">PARADA</span></div>
+          <div class="d-prole" id="dpr2">STAND-BY</div>
+          <div class="d-phours">⏱ <span id="dph2">0.0</span> min</div>
+        </div>
+      </div>
+
+      <!-- pipe saída -->
+      <div class="d-pipe-row">
+        <div class="d-ph" id="dp-out-l"></div><div class="d-pa">→</div><div class="d-ph" id="dp-out-r"></div>
+      </div>
+      <div style="text-align:center;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dimtxt);">RECALQUE — PROCESSO</div>
+
+      <!-- alt -->
+      <div style="text-align:center;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:7px;color:var(--dimtxt);letter-spacing:2px;">ALTERNÂNCIA</div>
+        <div class="d-alt">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--txthi);font-weight:700;">B1</span>
+          <div class="d-adot" id="dad1"></div>
+          <span style="font-size:14px;color:var(--dimtxt);">⇄</span>
+          <div class="d-adot" id="dad2"></div>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--txthi);font-weight:700;">B2</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BANNER + BOTÕES (col2, row2) -->
+<div style="grid-column:2;grid-row:2;display:flex;align-items:center;gap:5px;">
+  <div class="d-banner">
+    <div><div class="d-bl">SISTEMA</div><div class="d-bv" id="dbanner-val" style="color:var(--blue);">STANDBY</div></div>
+    <div><div class="d-bl">MODO</div><div class="d-bv" id="dbanner-mode" style="color:var(--green);">AUTO</div></div>
+    <div><div class="d-bl">CICLOS</div><div class="d-bv" id="dbanner-cycles" style="color:var(--txthi);">0</div></div>
+    <div><div class="demo-badge" style="display:inline-block!important;">● DEMO</div></div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--blue);" id="dclock">00:00:00</div>
+  </div>
+  <div class="d-btns">
+    <button class="d-btn" style="background:var(--green);"  onclick="toggleAuto()">⚙ AUTO</button>
+    <button class="d-btn" style="background:var(--cyan);"   onclick="cmdReset()">↺ RESET</button>
+    <button class="d-btn" style="background:var(--red);"    onclick="simFault(1)">⚠ B1</button>
+    <button class="d-btn" style="background:var(--orange);" onclick="simFault(2)">⚠ B2</button>
+  </div>
+</div>
+
+<!-- COL 3: SAÍDAS + LOG + STAMP -->
+<div class="dcol" style="grid-column:3;grid-row:1/3;">
+  <div class="dpanel grow">
+    <div class="dph"><div class="dcd" style="background:var(--green);"></div><div class="dct">Saídas DO810</div></div>
+    <div class="dscroll">
+      <div class="d-or"><span class="dol" style="color:var(--green);">DO_B1_START</span><span class="dos off" id="do-B1">OFF</span></div>
+      <div class="d-or"><span class="dol" style="color:var(--green);">DO_B2_START</span><span class="dos off" id="do-B2">OFF</span></div>
+      <div class="d-or"><span class="dol">PUMP_SHOULD_RUN</span><span class="dos off" id="do-RUN">OFF</span></div>
+      <div class="d-or"><span class="dol" style="color:var(--yellow);">STANDBY_ACTIVE</span><span class="dos off" id="do-STD">OFF</span></div>
+      <div class="d-or"><span class="dol" style="color:var(--orange);">AL_LEVEL_H 80%</span><span class="dos off" id="do-AH">OFF</span></div>
+      <div class="d-or"><span class="dol" style="color:var(--yellow);">AL_LEVEL_L 30%</span><span class="dos off" id="do-AL">OFF</span></div>
+      <div class="d-or"><span class="dol" style="color:var(--red);">AL_LEVEL_HH 95%</span><span class="dos off" id="do-HH">OFF</span></div>
+      <div class="d-or"><span class="dol" style="color:var(--red);">AL_LEVEL_LL 10%</span><span class="dos off" id="do-LL">OFF</span></div>
+      <div class="d-or"><span class="dol" style="color:var(--red);">FAULT_LATCH_B1</span><span class="dos off" id="do-FL1">OFF</span></div>
+      <div class="d-or"><span class="dol" style="color:var(--red);">FAULT_LATCH_B2</span><span class="dos off" id="do-FL2">OFF</span></div>
+    </div>
+  </div>
+  <div class="dpanel" style="flex:0 0 140px;">
+    <div class="dph">
+      <div class="dcd" style="background:var(--orange);"></div>
+      <div class="dct">Event Log</div>
+      <span style="margin-left:auto;font-size:8px;color:var(--dimtxt);cursor:pointer;" onclick="clearLog2()">CLR</span>
+    </div>
+    <div class="dscroll" id="dlog-list"></div>
+  </div>
+  <div class="d-stamp">
+    <div class="d-sbg">IF</div>
+    <div><div class="d-sn">IDERLAN FREITAS</div><div class="d-ss">AC 800M · S800 I/O · IEC 61131-3</div></div>
+  </div>
+</div>
+
+</div><!-- /desk -->
+
+<div class="banner">
+  <div><div class="bl">SISTEMA</div><div class="bv" id="banner-val" style="color:var(--blue);">STANDBY</div></div>
+  <div style="text-align:center;"><div class="bl">MODO</div><div class="bv" id="banner-mode" style="color:var(--green);">AUTO</div></div>
+  <div style="text-align:center;"><div class="bl">CICLOS</div><div class="bv" id="banner-cycles" style="color:var(--txthi);">0</div></div>
+  <div><div class="demo-badge">● DEMO</div></div>
+</div>
+
+<!-- BORBULHADOR -->
+<div class="card" id="s-level">
+  <div class="ch" onclick="ts('s-level')">
+    <div class="cd" style="background:var(--blue);"></div>
+    <div class="ct">Borbulhador 4-20mA — LT-XXX</div>
+    <div class="ca">▼</div>
+  </div>
+  <div class="cb">
+    <div class="lw">
+      <!-- TANQUE SVG -->
+      <div style="text-align:center;margin-bottom:10px;">
+        <svg viewBox="0 0 260 110" style="width:92%;max-width:340px;display:block;margin:0 auto;">
+          <defs>
+            <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#64b5f6" stop-opacity=".65"/>
+              <stop offset="100%" stop-color="#1255a0" stop-opacity=".9"/>
+            </linearGradient>
+            <clipPath id="tc"><rect x="14" y="8" width="182" height="86" rx="3"/></clipPath>
+          </defs>
+          <!-- Corpo tanque -->
+          <rect x="12" y="6" width="186" height="90" rx="5" fill="#f0f4f8" stroke="#a0b4c8" stroke-width="2"/>
+          <!-- Líquido -->
+          <rect id="t-liq" x="14" y="94" width="182" height="0" rx="3" fill="url(#wg)" clip-path="url(#tc)" style="transition:all .5s;"/>
+          <!-- Linhas setpoint -->
+          <line x1="12" y1="14.5" x2="18" y2="14.5" stroke="#b82000" stroke-width="2"/>
+          <line x1="12" y1="23"   x2="18" y2="23"   stroke="#c05000" stroke-width="2"/>
+          <line x1="12" y1="69"   x2="18" y2="69"   stroke="#c88000" stroke-width="2"/>
+          <line x1="12" y1="82"   x2="18" y2="82"   stroke="#b82000" stroke-width="2"/>
+          <text x="20" y="17"  font-family="monospace" font-size="8" fill="#b82000" font-weight="bold">HH 95%</text>
+          <text x="20" y="26"  font-family="monospace" font-size="8" fill="#c05000" font-weight="bold">H  80%</text>
+          <text x="20" y="72"  font-family="monospace" font-size="8" fill="#c88000" font-weight="bold">L  30%</text>
+          <text x="20" y="85"  font-family="monospace" font-size="8" fill="#b82000" font-weight="bold">LL 10%</text>
+          <!-- Valor central -->
+          <text id="t-pct" x="105" y="60" text-anchor="middle" font-family="Share Tech Mono" font-size="22" font-weight="bold" fill="#1255a0">0%</text>
+          <text id="t-ma"  x="105" y="75" text-anchor="middle" font-family="Share Tech Mono" font-size="10" fill="#7a90a4">4.00 mA</text>
+          <!-- Borbulhador (tubo de ar comprimido imerso) -->
+          <line x1="175" y1="94" x2="175" y2="20" stroke="#90a8b8" stroke-width="2" stroke-dasharray="4,3"/>
+          <circle cx="175" cy="20" r="4" fill="none" stroke="#90a8b8" stroke-width="1.5"/>
+          <circle cx="175" cy="20" r="2" fill="#90a8b8"/>
+          <text x="180" y="24" font-family="monospace" font-size="7" fill="#90a8b8">LT-XXX</text>
+          <text x="180" y="33" font-family="monospace" font-size="7" fill="#90a8b8">4-20mA</text>
+          <!-- Saída fundo -->
+          <rect x="92" y="95" width="36" height="10" rx="2" fill="#90a8b8"/>
+          <text x="110" y="103" text-anchor="middle" font-family="monospace" font-size="7" fill="#fff">SAÍDA</text>
+          <!-- Barra de mA direita -->
+          <rect x="208" y="6" width="40" height="90" rx="4" fill="#e8eef4" stroke="#a0b4c8" stroke-width="1.5"/>
+          <rect id="t-ma-bar" x="210" y="94" width="36" height="0" rx="3" fill="#42a5f5" style="transition:all .5s;"/>
+          <text x="228" y="104" text-anchor="middle" font-family="monospace" font-size="7" fill="#7a90a4">mA</text>
+          <text x="228" y="17" text-anchor="middle" font-family="monospace" font-size="7" fill="#7a90a4">20</text>
+          <text x="228" y="99" text-anchor="middle" font-family="monospace" font-size="7" fill="#7a90a4">4</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETPOINTS -->
+<div class="card" id="s-sp">
+  <div class="ch" onclick="ts('s-sp')">
+    <div class="cd" style="background:var(--yellow);"></div>
+    <div class="ct">Setpoints de Nível</div><div class="ca">▼</div>
+  </div>
+  <div class="cb">
+    <div class="sg">
+      <div class="sc" id="sp-hh"><div class="sn">SP_LEVEL_HH</div><div class="sv" style="color:var(--red);">95.0</div><div class="su">% — ALARME HH</div></div>
+      <div class="sc" id="sp-h"> <div class="sn">SP_LEVEL_H</div> <div class="sv" style="color:var(--green);">80.0</div><div class="su">% — LIGA BOMBA</div></div>
+      <div class="sc" id="sp-l"> <div class="sn">SP_LEVEL_L</div> <div class="sv" style="color:var(--yellow);">30.0</div><div class="su">% — DESLIGA BOMBA</div></div>
+      <div class="sc" id="sp-ll"><div class="sn">SP_LEVEL_LL</div><div class="sv" style="color:var(--red);">10.0</div><div class="su">% — ALARME LL</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- P&ID -->
+<div class="card" id="s-pumps">
+  <div class="ch" onclick="ts('s-pumps')">
+    <div class="cd" style="background:var(--green);"></div>
+    <div class="ct">P&ID — Bombas Alternadas AC 800M</div><div class="ca">▼</div>
+  </div>
+  <div class="cb" style="padding:12px;">
+
+    <div class="pipe-row" style="margin-bottom:6px;">
+      <div class="pipe-h" id="p-dn-l"></div><div class="pa">▼</div><div class="pipe-h" id="p-dn-r"></div>
+    </div>
+
+    <div class="pr">
+      <!-- BOMBA 1 -->
+      <div class="pc" id="pc1">
+        <div class="ptag">BOMBA B1</div>
+        <svg viewBox="0 0 140 100" style="width:100%;max-width:180px;display:block;margin:0 auto 4px;">
+          <!-- MOTOR ELÉTRICO -->
+          <rect id="mb1" x="8" y="22" width="72" height="52" rx="6" fill="#dde8f2" stroke="#8aaccc" stroke-width="2"/>
+          <!-- Aletas -->
+          <line x1="20" y1="22" x2="20" y2="74" stroke="#aac4d8" stroke-width="1.2"/>
+          <line x1="30" y1="22" x2="30" y2="74" stroke="#aac4d8" stroke-width="1.2"/>
+          <line x1="40" y1="22" x2="40" y2="74" stroke="#aac4d8" stroke-width="1.2"/>
+          <line x1="50" y1="22" x2="50" y2="74" stroke="#aac4d8" stroke-width="1.2"/>
+          <line x1="60" y1="22" x2="60" y2="74" stroke="#aac4d8" stroke-width="1.2"/>
+          <line x1="70" y1="22" x2="70" y2="74" stroke="#aac4d8" stroke-width="1.2"/>
+          <!-- Tampa lateral -->
+          <ellipse cx="80" cy="48" rx="12" ry="26" fill="#c8d8e8" stroke="#8aaccc" stroke-width="2"/>
+          <!-- Eixo -->
+          <line id="sh1" x1="92" y1="48" x2="108" y2="48" stroke="#507090" stroke-width="3.5" stroke-linecap="round"/>
+          <!-- BOMBA CENTRÍFUGA -->
+          <ellipse id="bp1" cx="120" cy="48" rx="16" ry="16" fill="#d0e4f4" stroke="#4a80b0" stroke-width="2"/>
+          <!-- Carcaça espiral (voluta) -->
+          <path id="bv1" d="M120,32 A16,16 0 1,1 104,48 Q104,62 116,65 Q130,66 132,52"
+                fill="none" stroke="#4a80b0" stroke-width="2"/>
+          <!-- Bocal recalque -->
+          <rect x="133" y="40" width="7" height="16" rx="2" fill="#a0c0d8" stroke="#4a80b0" stroke-width="1.5"/>
+          <!-- Bocal sucção -->
+          <rect x="107" y="60" width="20" height="7" rx="2" fill="#a0c0d8" stroke="#4a80b0" stroke-width="1.5"/>
+          <text x="117" y="66" text-anchor="middle" font-family="monospace" font-size="6" fill="#4a80b0">SUC</text>
+          <!-- Impelidor -->
+          <g id="imp1" transform="translate(120,48)">
+            <line x1="0" y1="-10" x2="0" y2="10"  stroke="#2a5878" stroke-width="3" stroke-linecap="round"/>
+            <line x1="-10" y1="0" x2="10" y2="0"  stroke="#2a5878" stroke-width="3" stroke-linecap="round"/>
+            <line x1="-7" y1="-7" x2="7" y2="7"   stroke="#2a5878" stroke-width="2" stroke-linecap="round"/>
+            <line x1="7" y1="-7"  x2="-7" y2="7"  stroke="#2a5878" stroke-width="2" stroke-linecap="round"/>
+            <circle r="4" fill="#2a5878"/>
+          </g>
+          <!-- Caixa bornes -->
+          <rect x="8" y="10" width="26" height="14" rx="3" fill="#c8d4e0" stroke="#8aaccc" stroke-width="1.5"/>
+          <text x="21" y="20" text-anchor="middle" font-family="Orbitron" font-size="7" fill="#507090" font-weight="bold">M</text>
+          <!-- LED status -->
+          <circle id="led1" cx="62" cy="14" r="6" fill="#dde8f2" stroke="#a0b8cc" stroke-width="1.5"/>
+          <!-- Tags -->
+          <text x="44" y="88" text-anchor="middle" font-family="Share Tech Mono" font-size="8" fill="#507090">B-01 / MOT-B1</text>
+          <text x="120" y="88" text-anchor="middle" font-family="Share Tech Mono" font-size="7" fill="#4a80b0">CENTRIFUGA</text>
+        </svg>
+        <div><span class="psb soff" id="ps1">PARADA</span></div>
+        <div class="prole" id="pr1">STAND-BY</div>
+        <div class="phours">⏱ <span id="ph1">0.0</span> min</div>
+      </div>
+
+      <!-- BOMBA 2 -->
+      <div class="pc" id="pc2">
+        <div class="ptag">BOMBA B2</div>
+        <svg viewBox="0 0 140 100" style="width:100%;max-width:180px;display:block;margin:0 auto 4px;">
+          <rect id="mb2" x="8" y="22" width="72" height="52" rx="6" fill="#dde8f2" stroke="#8aaccc" stroke-width="2"/>
+          <line x1="20" y1="22" x2="20" y2="74" stroke="#aac4d8" stroke-width="1.2"/>
+          <line x1="30" y1="22" x2="30" y2="74" stroke="#aac4d8" stroke-width="1.2"/>
+          <line x1="40" y1="22" x2="40" y2="74" stroke="#aac4d8" stroke-width="1.2"/>
+          <line x1="50" y1="22" x2="50" y2="74" stroke="#aac4d8" stroke-width="1.2"/>
+          <line x1="60" y1="22" x2="60" y2="74" stroke="#aac4d8" stroke-width="1.2"/>
+          <line x1="70" y1="22" x2="70" y2="74" stroke="#aac4d8" stroke-width="1.2"/>
+          <ellipse cx="80" cy="48" rx="12" ry="26" fill="#c8d8e8" stroke="#8aaccc" stroke-width="2"/>
+          <line id="sh2" x1="92" y1="48" x2="108" y2="48" stroke="#507090" stroke-width="3.5" stroke-linecap="round"/>
+          <ellipse id="bp2" cx="120" cy="48" rx="16" ry="16" fill="#d0e4f4" stroke="#4a80b0" stroke-width="2"/>
+          <path id="bv2" d="M120,32 A16,16 0 1,1 104,48 Q104,62 116,65 Q130,66 132,52"
+                fill="none" stroke="#4a80b0" stroke-width="2"/>
+          <rect x="133" y="40" width="7" height="16" rx="2" fill="#a0c0d8" stroke="#4a80b0" stroke-width="1.5"/>
+          <rect x="107" y="60" width="20" height="7" rx="2" fill="#a0c0d8" stroke="#4a80b0" stroke-width="1.5"/>
+          <text x="117" y="66" text-anchor="middle" font-family="monospace" font-size="6" fill="#4a80b0">SUC</text>
+          <g id="imp2" transform="translate(120,48)">
+            <line x1="0" y1="-10" x2="0" y2="10"  stroke="#2a5878" stroke-width="3" stroke-linecap="round"/>
+            <line x1="-10" y1="0" x2="10" y2="0"  stroke="#2a5878" stroke-width="3" stroke-linecap="round"/>
+            <line x1="-7" y1="-7" x2="7" y2="7"   stroke="#2a5878" stroke-width="2" stroke-linecap="round"/>
+            <line x1="7" y1="-7"  x2="-7" y2="7"  stroke="#2a5878" stroke-width="2" stroke-linecap="round"/>
+            <circle r="4" fill="#2a5878"/>
+          </g>
+          <rect x="8" y="10" width="26" height="14" rx="3" fill="#c8d4e0" stroke="#8aaccc" stroke-width="1.5"/>
+          <text x="21" y="20" text-anchor="middle" font-family="Orbitron" font-size="7" fill="#507090" font-weight="bold">M</text>
+          <circle id="led2" cx="62" cy="14" r="6" fill="#dde8f2" stroke="#a0b8cc" stroke-width="1.5"/>
+          <text x="44" y="88" text-anchor="middle" font-family="Share Tech Mono" font-size="8" fill="#507090">B-02 / MOT-B2</text>
+          <text x="120" y="88" text-anchor="middle" font-family="Share Tech Mono" font-size="7" fill="#4a80b0">CENTRIFUGA</text>
+        </svg>
+        <div><span class="psb soff" id="ps2">PARADA</span></div>
+        <div class="prole" id="pr2">STAND-BY</div>
+        <div class="phours">⏱ <span id="ph2">0.0</span> min</div>
+      </div>
+    </div>
+
+    <div class="pipe-row" style="margin-top:4px;">
+      <div class="pipe-h" id="p-out-l"></div><div class="pa">→</div><div class="pipe-h" id="p-out-r"></div>
+    </div>
+    <div style="text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dimtxt);margin-top:4px;">RECALQUE — PROCESSO</div>
+
+    <div style="margin-top:10px;text-align:center;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:8px;color:var(--dimtxt);letter-spacing:2px;margin-bottom:5px;">ALTERNÂNCIA AUTOMÁTICA</div>
+      <div class="alt-row">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--txthi);font-weight:700;">B1</span>
+        <div class="adot" id="ad1"></div>
+        <span style="font-size:18px;color:var(--dimtxt);">⇄</span>
+        <div class="adot" id="ad2"></div>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--txthi);font-weight:700;">B2</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ENTRADAS -->
+<div class="card" id="s-di">
+  <div class="ch" onclick="ts('s-di')">
+    <div class="cd" style="background:var(--blue);"></div>
+    <div class="ct">Entradas Digitais — toque para simular</div><div class="ca">▼</div>
+  </div>
+  <div class="cb">
+    <div class="ir" onclick="tog('DI_AUTO_MODE')"><div><div class="il">Modo AUTO</div><div class="itg">DI_AUTO_MODE / SW-AUTO</div></div><div class="led on" id="l-AUTO"></div></div>
+    <div class="ir" onclick="tog('DI_B1_RUNNING')"><div><div class="il">B1 Funcionando (feedback)</div><div class="itg">DI_B1_RUNNING / XS-B1</div></div><div class="led off" id="l-R1"></div></div>
+    <div class="ir" onclick="tog('DI_B2_RUNNING')"><div><div class="il">B2 Funcionando (feedback)</div><div class="itg">DI_B2_RUNNING / XS-B2</div></div><div class="led off" id="l-R2"></div></div>
+    <div class="ir" onclick="tog('DI_B1_FAULT')" style="border-top:1px solid var(--border2);"><div><div class="il" style="color:var(--red);">Falha Bomba 1 (térmico)</div><div class="itg">DI_B1_FAULT / XA-B1</div></div><div class="led off" id="l-F1"></div></div>
+    <div class="ir" onclick="tog('DI_B2_FAULT')"><div><div class="il" style="color:var(--red);">Falha Bomba 2 (térmico)</div><div class="itg">DI_B2_FAULT / XA-B2</div></div><div class="led off" id="l-F2"></div></div>
+    <div class="ir" onclick="cmdReset()" style="border-top:1px solid var(--border2);"><div><div class="il" style="color:var(--cyan);">Reset de Falhas</div><div class="itg">DI_RESET_FAULT / PB-RST</div></div><div class="led off" id="l-RST"></div></div>
+  </div>
+</div>
+
+<!-- SAÍDAS -->
+<div class="card" id="s-do">
+  <div class="ch" onclick="ts('s-do')">
+    <div class="cd" style="background:var(--green);"></div>
+    <div class="ct">Saídas DO810 / Variáveis Internas ST</div><div class="ca">▼</div>
+  </div>
+  <div class="cb">
+    <div class="or"><span class="ol" style="color:var(--green);">DO_B1_START — Liga B1</span><span class="os off" id="o-B1">OFF</span></div>
+    <div class="or"><span class="ol" style="color:var(--green);">DO_B2_START — Liga B2</span><span class="os off" id="o-B2">OFF</span></div>
+    <div class="or"><span class="ol">PUMP_SHOULD_RUN (latch)</span><span class="os off" id="o-RUN">OFF</span></div>
+    <div class="or"><span class="ol" style="color:var(--yellow);">STANDBY_ACTIVE</span><span class="os off" id="o-STD">OFF</span></div>
+    <div class="or"><span class="ol" style="color:var(--orange);">AL_LEVEL_H (80%)</span><span class="os off" id="o-AH">OFF</span></div>
+    <div class="or"><span class="ol" style="color:var(--yellow);">AL_LEVEL_L (30%)</span><span class="os off" id="o-AL">OFF</span></div>
+    <div class="or"><span class="ol" style="color:var(--red);">AL_LEVEL_HH (95%)</span><span class="os off" id="o-HH">OFF</span></div>
+    <div class="or"><span class="ol" style="color:var(--red);">AL_LEVEL_LL (10%)</span><span class="os off" id="o-LL">OFF</span></div>
+    <div class="or"><span class="ol" style="color:var(--red);">FAULT_LATCH_B1</span><span class="os off" id="o-FL1">OFF</span></div>
+    <div class="or"><span class="ol" style="color:var(--red);">FAULT_LATCH_B2</span><span class="os off" id="o-FL2">OFF</span></div>
+  </div>
+</div>
+
+<!-- LOG -->
+<div class="card" id="s-log">
+  <div class="ch" onclick="ts('s-log')">
+    <div class="cd" style="background:var(--orange);"></div>
+    <div class="ct">Event Log — 800xA</div>
+    <span style="margin-left:auto;font-size:9px;color:var(--dimtxt);cursor:pointer;padding:0 4px;" onclick="event.stopPropagation();clearLog()">CLR</span>
+    <div class="ca">▼</div>
+  </div>
+  <div class="cb" id="log-list"></div>
+</div>
+
+<div class="stamp">
+  <div class="sbg">IF</div>
+  <div><div class="sn2">IDERLAN FREITAS</div><div class="ss2">AUTOMAÇÃO INDUSTRIAL · ABB AC 800M · S800 I/O · IEC 61131-3 ST</div></div>
+</div>
+
+<div class="ctrl-bar">
+  <button class="btn btn-auto"  onclick="toggleAuto()">⚙ AUTO</button>
+  <button class="btn btn-reset" onclick="cmdReset()">↺ RESET</button>
+  <button class="btn btn-b1f"   onclick="simFault(1)">⚠ FALHA B1</button>
+  <button class="btn btn-b2f"   onclick="simFault(2)">⚠ FALHA B2</button>
+</div>
+
+<script>
+const s={
+  DI_AUTO_MODE:true,DI_B1_RUNNING:false,DI_B2_RUNNING:false,
+  DI_B1_FAULT:false,DI_B2_FAULT:false,DI_RESET_FAULT:false,
+  LEVEL_PV:5,LEVEL_VALID:true,
+  SP_LEVEL_HH:95,SP_LEVEL_H:80,SP_LEVEL_L:30,SP_LEVEL_LL:10,
+  AL_HH:false,AL_H:false,AL_L:false,AL_LL:false,
+  PUMP_SHOULD_RUN:false,
+  FAULT_LATCH_B1:false,FAULT_LATCH_B2:false,AL_B1_FAULT:false,AL_B2_FAULT:false,
+  ALTERNATION_FLAG:false,B1_ACTIVE:false,B2_ACTIVE:false,
+  STANDBY_ACTIVE:false,DO_B1_START:false,DO_B2_START:false,
+  levelDir:1,cycleCount:0,b1H:0,b2H:0
+};
+let wdB1=0,wdB2=0,ang1=0,ang2=0,lastT=performance.now();
+
+function scan(){
+  const now=performance.now(),dt=(now-lastT)/1000;lastT=now;
+  if(s.DI_AUTO_MODE){const sp=s.DO_B1_START||s.DO_B2_START?2.8:1.8;s.LEVEL_PV=Math.max(0,Math.min(100,s.LEVEL_PV+s.levelDir*sp*dt));}
+  if(s.DO_B1_START)s.b1H+=dt/3600;
+  if(s.DO_B2_START)s.b2H+=dt/3600;
+  if(s.DO_B1_START)ang1+=dt*360*3;
+  if(s.DO_B2_START)ang2+=dt*360*3;
+  s.LEVEL_VALID=s.LEVEL_PV>=0&&s.LEVEL_PV<=105;
+  if(s.LEVEL_VALID){s.AL_HH=s.LEVEL_PV>=s.SP_LEVEL_HH;s.AL_H=s.LEVEL_PV>=s.SP_LEVEL_H;s.AL_L=s.LEVEL_PV<=s.SP_LEVEL_L;s.AL_LL=s.LEVEL_PV<=s.SP_LEVEL_LL;}
+  if(s.DI_B1_FAULT){s.FAULT_LATCH_B1=true;s.AL_B1_FAULT=true;}
+  if(s.DI_B2_FAULT){s.FAULT_LATCH_B2=true;s.AL_B2_FAULT=true;}
+  if(s.DI_RESET_FAULT&&!s.DI_B1_FAULT){s.FAULT_LATCH_B1=false;s.AL_B1_FAULT=false;}
+  if(s.DI_RESET_FAULT&&!s.DI_B2_FAULT){s.FAULT_LATCH_B2=false;s.AL_B2_FAULT=false;}
+  // R5 — BUG FIX
+  if(s.AL_H&&!s.AL_L){if(!s.PUMP_SHOULD_RUN){s.PUMP_SHOULD_RUN=true;s.levelDir=-1;log('info','Nivel H 80% — PUMP_SHOULD_RUN := TRUE');}}
+  else if(s.AL_L){if(s.PUMP_SHOULD_RUN){s.ALTERNATION_FLAG=!s.ALTERNATION_FLAG;s.cycleCount++;s.PUMP_SHOULD_RUN=false;s.levelDir=1;log('ok','Nivel L 30% — ciclo #'+s.cycleCount+' — alterna para '+(s.ALTERNATION_FLAG?'B2':'B1'));}}
+  if(!s.LEVEL_VALID)s.PUMP_SHOULD_RUN=false;
+  if(s.DO_B1_START&&!s.DI_B1_RUNNING){wdB1+=dt;if(wdB1>=15){s.FAULT_LATCH_B1=true;log('alarm','WATCHDOG B1 timeout 15s');wdB1=0;}}else wdB1=0;
+  if(s.DO_B2_START&&!s.DI_B2_RUNNING){wdB2+=dt;if(wdB2>=15){s.FAULT_LATCH_B2=true;log('alarm','WATCHDOG B2 timeout 15s');wdB2=0;}}else wdB2=0;
+  s.B1_ACTIVE=!s.ALTERNATION_FLAG&&!s.FAULT_LATCH_B1;
+  s.B2_ACTIVE= s.ALTERNATION_FLAG&&!s.FAULT_LATCH_B2;
+  const pB1=s.DO_B1_START,pB2=s.DO_B2_START;
+  const both=s.FAULT_LATCH_B1&&s.FAULT_LATCH_B2;
+  if(s.DI_AUTO_MODE&&s.LEVEL_VALID&&!both){
+    if(s.B1_ACTIVE){s.DO_B1_START=s.PUMP_SHOULD_RUN;s.DO_B2_START=false;s.STANDBY_ACTIVE=false;}
+    else if(s.B2_ACTIVE){s.DO_B2_START=s.PUMP_SHOULD_RUN;s.DO_B1_START=false;s.STANDBY_ACTIVE=false;}
+    else if(s.FAULT_LATCH_B1&&!s.FAULT_LATCH_B2){s.DO_B1_START=false;s.DO_B2_START=s.PUMP_SHOULD_RUN;s.STANDBY_ACTIVE=s.PUMP_SHOULD_RUN;}
+    else if(s.FAULT_LATCH_B2&&!s.FAULT_LATCH_B1){s.DO_B2_START=false;s.DO_B1_START=s.PUMP_SHOULD_RUN;s.STANDBY_ACTIVE=s.PUMP_SHOULD_RUN;}
+  }else{s.DO_B1_START=false;s.DO_B2_START=false;s.STANDBY_ACTIVE=false;}
+  if(s.DO_B1_START!==pB1)log(s.DO_B1_START?'ok':'warn','DO_B1_START → '+(s.DO_B1_START?'ON':'OFF'));
+  if(s.DO_B2_START!==pB2)log(s.DO_B2_START?'ok':'warn','DO_B2_START → '+(s.DO_B2_START?'ON':'OFF'));
+  if(s.DO_B1_START)setTimeout(()=>{if(s.DO_B1_START)s.DI_B1_RUNNING=true;},1500);else s.DI_B1_RUNNING=false;
+  if(s.DO_B2_START)setTimeout(()=>{if(s.DO_B2_START)s.DI_B2_RUNNING=true;},1500);else s.DI_B2_RUNNING=false;
+  draw();requestAnimationFrame(scan);
+}
+
+function draw(){
+  document.getElementById('clock').textContent=new Date().toTimeString().slice(0,8);
+  let st='STANDBY',sc='var(--blue)';
+  if(s.FAULT_LATCH_B1&&s.FAULT_LATCH_B2){st='FALHA TOTAL';sc='var(--red)';}
+  else if(s.STANDBY_ACTIVE){st='STAND-BY ATIVO';sc='var(--yellow)';}
+  else if(s.DO_B1_START){st='B1 RODANDO';sc='var(--green)';}
+  else if(s.DO_B2_START){st='B2 RODANDO';sc='var(--green)';}
+  else if(!s.DI_AUTO_MODE){st='MODO MANUAL';sc='var(--yellow)';}
+  ['sys-state','banner-val'].forEach(id=>{el(id).textContent=st;el(id).style.color=sc;});
+  el('banner-mode').textContent=s.DI_AUTO_MODE?'AUTO':'MANUAL';
+  el('banner-mode').style.color=s.DI_AUTO_MODE?'var(--green)':'var(--yellow)';
+  el('banner-cycles').textContent=s.cycleCount;
+  // Tanque
+  const p=Math.max(0,Math.min(100,s.LEVEL_PV)),ma=4+(p/100)*16;
+  const lH=(p/100)*86,lY=8+86-lH;
+  el('t-liq').setAttribute('y',lY);el('t-liq').setAttribute('height',lH);
+  el('t-pct').textContent=p.toFixed(0)+'%';
+  el('t-ma').textContent=ma.toFixed(2)+' mA';
+  el('t-pct').setAttribute('fill',p>=95||p<=10?'#b82000':p>=80||p<=30?'#c88000':'#1255a0');
+  const mH=(ma-4)/16*86;el('t-ma-bar').setAttribute('y',94-mH);el('t-ma-bar').setAttribute('height',mH);
+  // SP cards
+  el('sp-hh').className='sc'+(s.AL_HH?' alarm':'');
+  el('sp-h').className ='sc'+(s.AL_H&&!s.AL_HH?' active':'');
+  el('sp-l').className ='sc'+(s.AL_L&&!s.AL_LL?' active':'');
+  el('sp-ll').className='sc'+(s.AL_LL?' alarm':'');
+  // LEDs
+  el('l-AUTO').className='led '+(s.DI_AUTO_MODE?'on':'off');
+  el('l-R1').className='led '+(s.DI_B1_RUNNING?'on':'off');
+  el('l-R2').className='led '+(s.DI_B2_RUNNING?'on':'off');
+  el('l-F1').className='led '+(s.DI_B1_FAULT?'red':'off');
+  el('l-F2').className='led '+(s.DI_B2_FAULT?'red':'off');
+  el('l-RST').className='led '+(s.DI_RESET_FAULT?'amber':'off');
+  // Motores
+  drawM(1,s.DO_B1_START,s.FAULT_LATCH_B1,s.STANDBY_ACTIVE&&s.DO_B1_START);
+  drawM(2,s.DO_B2_START,s.FAULT_LATCH_B2,s.STANDBY_ACTIVE&&s.DO_B2_START);
+  el('imp1').setAttribute('transform',`translate(120,48) rotate(${ang1%360})`);
+  el('imp2').setAttribute('transform',`translate(120,48) rotate(${ang2%360})`);
+  // Cards
+  drawPC(1,s.DO_B1_START,s.FAULT_LATCH_B1,!s.ALTERNATION_FLAG,s.STANDBY_ACTIVE&&s.DO_B1_START);
+  drawPC(2,s.DO_B2_START,s.FAULT_LATCH_B2, s.ALTERNATION_FLAG,s.STANDBY_ACTIVE&&s.DO_B2_START);
+  // Pipes
+  const fl=s.DO_B1_START||s.DO_B2_START;
+  ['p-dn-l','p-dn-r','p-out-l','p-out-r'].forEach(id=>el(id).className='pipe-h'+(fl?' flow':''));
+  // Alt dots
+  el('ad1').className='adot '+(!s.ALTERNATION_FLAG?'on':'off2');
+  el('ad2').className='adot '+(s.ALTERNATION_FLAG?'on':'off2');
+  // Saídas
+  os('o-B1',s.DO_B1_START,false);os('o-B2',s.DO_B2_START,false);
+  os('o-RUN',s.PUMP_SHOULD_RUN,false);os('o-STD',s.STANDBY_ACTIVE,false);
+  os('o-AH',s.AL_H,false);os('o-AL',s.AL_L,false);
+  os('o-HH',s.AL_HH,true);os('o-LL',s.AL_LL,true);
+  os('o-FL1',s.FAULT_LATCH_B1,true);os('o-FL2',s.FAULT_LATCH_B2,true);
+  el('ph1').textContent=(s.b1H*60).toFixed(1);el('ph2').textContent=(s.b2H*60).toFixed(1);
+
+  // ── DESKTOP IDs ──
+  function dEl(id){return document.getElementById(id);}
+  function dOs(id,val,alarm){const e=dEl(id);if(!e)return;if(val){e.className='dos '+(alarm?'trip':'on');e.textContent=alarm?'ALARM':'ON';}else{e.className='dos off';e.textContent='OFF';}}
+  if(dEl('dclock'))dEl('dclock').textContent=new Date().toTimeString().slice(0,8);
+  if(dEl('dbanner-val')){dEl('dbanner-val').textContent=st;dEl('dbanner-val').style.color=sc;}
+  if(dEl('dbanner-mode')){dEl('dbanner-mode').textContent=s.DI_AUTO_MODE?'AUTO':'MANUAL';dEl('dbanner-mode').style.color=s.DI_AUTO_MODE?'var(--green)':'var(--yellow)';}
+  if(dEl('dbanner-cycles'))dEl('dbanner-cycles').textContent=s.cycleCount;
+  // tanque desktop
+  const dp=Math.max(0,Math.min(100,s.LEVEL_PV)),dma=4+(dp/100)*16;
+  const dlH=(dp/100)*66,dlY=6+66-dlH;
+  if(dEl('dt-liq')){dEl('dt-liq').setAttribute('y',dlY);dEl('dt-liq').setAttribute('height',dlH);}
+  if(dEl('dt-pct')){dEl('dt-pct').textContent=dp.toFixed(0)+'%';dEl('dt-pct').setAttribute('fill',dp>=95||dp<=10?'#b82000':dp>=80||dp<=30?'#c88000':'#1255a0');}
+  if(dEl('dt-ma'))dEl('dt-ma').textContent=dma.toFixed(2)+' mA';
+  const dmH=(dma-4)/16*66;if(dEl('dt-ma-bar')){dEl('dt-ma-bar').setAttribute('y',72-dmH);dEl('dt-ma-bar').setAttribute('height',dmH);}
+  // SP desktop
+  if(dEl('dsp-hh'))dEl('dsp-hh').className='d-sc'+(s.AL_HH?' alarm':'');
+  if(dEl('dsp-h')) dEl('dsp-h').className ='d-sc'+(s.AL_H&&!s.AL_HH?' active':'');
+  if(dEl('dsp-l')) dEl('dsp-l').className ='d-sc'+(s.AL_L&&!s.AL_LL?' active':'');
+  if(dEl('dsp-ll'))dEl('dsp-ll').className='d-sc'+(s.AL_LL?' alarm':'');
+  // LEDs desktop
+  if(dEl('dl-AUTO'))dEl('dl-AUTO').className='led '+(s.DI_AUTO_MODE?'on':'off');
+  if(dEl('dl-R1'))dEl('dl-R1').className='led '+(s.DI_B1_RUNNING?'on':'off');
+  if(dEl('dl-R2'))dEl('dl-R2').className='led '+(s.DI_B2_RUNNING?'on':'off');
+  if(dEl('dl-F1'))dEl('dl-F1').className='led '+(s.DI_B1_FAULT?'red':'off');
+  if(dEl('dl-F2'))dEl('dl-F2').className='led '+(s.DI_B2_FAULT?'red':'off');
+  if(dEl('dl-RST'))dEl('dl-RST').className='led '+(s.DI_RESET_FAULT?'amber':'off');
+  // motores desktop
+  function dDrawM(n,run,fault,stdby){
+    const mb=dEl('dmb'+n),bp=dEl('dbp'+n),sh=dEl('dsh'+n),ld=dEl('dled'+n);
+    if(!mb)return;
+    if(fault){mb.setAttribute('fill','#ffd0c8');mb.setAttribute('stroke','#b82000');bp.setAttribute('fill','#ffd0c8');bp.setAttribute('stroke','#b82000');sh.setAttribute('stroke','#b82000');ld.setAttribute('fill','#b82000');ld.setAttribute('stroke','#b82000');}
+    else if(run){const c=stdby?'#c88000':'#00954a',c2=stdby?'#fff8e0':'#e0f8ec';mb.setAttribute('fill',c2);mb.setAttribute('stroke',c);bp.setAttribute('fill',c2);bp.setAttribute('stroke','#1255a0');sh.setAttribute('stroke','#1255a0');ld.setAttribute('fill',c);ld.setAttribute('stroke',c);}
+    else{mb.setAttribute('fill','#dde8f2');mb.setAttribute('stroke','#8aaccc');bp.setAttribute('fill','#d0e4f4');bp.setAttribute('stroke','#4a80b0');sh.setAttribute('stroke','#507090');ld.setAttribute('fill','#dde8f2');ld.setAttribute('stroke','#a0b8cc');}
+  }
+  dDrawM(1,s.DO_B1_START,s.FAULT_LATCH_B1,s.STANDBY_ACTIVE&&s.DO_B1_START);
+  dDrawM(2,s.DO_B2_START,s.FAULT_LATCH_B2,s.STANDBY_ACTIVE&&s.DO_B2_START);
+  if(dEl('dimp1'))dEl('dimp1').setAttribute('transform',`translate(108,40) rotate(${ang1%360})`);
+  if(dEl('dimp2'))dEl('dimp2').setAttribute('transform',`translate(108,40) rotate(${ang2%360})`);
+  // pump cards desktop
+  function dDrawPC(n,run,fault,isPrin,isStd){
+    const c=dEl('dpc'+n),st=dEl('dps'+n),r=dEl('dpr'+n);
+    if(!c)return;
+    if(fault){c.className='d-pc fault';st.className='d-psb sfault';st.textContent='FALHA';r.textContent='INOPERANTE';r.className='d-prole';}
+    else if(isStd){c.className='d-pc standby-run';st.className='d-psb sstdby';st.textContent='STAND-BY';r.textContent='ASSUMIU FALHA';r.className='d-prole';}
+    else if(run){c.className='d-pc running';st.className='d-psb srun';st.textContent='RODANDO';r.textContent='PRINCIPAL';r.className='d-prole p2';}
+    else{c.className='d-pc'+(isPrin?' principal':'');st.className='d-psb soff';st.textContent='PARADA';r.textContent=isPrin?'PRÓX. CICLO':'STAND-BY';r.className='d-prole'+(isPrin?' p2':'');}
+  }
+  dDrawPC(1,s.DO_B1_START,s.FAULT_LATCH_B1,!s.ALTERNATION_FLAG,s.STANDBY_ACTIVE&&s.DO_B1_START);
+  dDrawPC(2,s.DO_B2_START,s.FAULT_LATCH_B2, s.ALTERNATION_FLAG,s.STANDBY_ACTIVE&&s.DO_B2_START);
+  // pipes desktop
+  const dfl=s.DO_B1_START||s.DO_B2_START;
+  ['dp-dn-l','dp-dn-r','dp-out-l','dp-out-r'].forEach(id=>{if(dEl(id))dEl(id).className='d-ph'+(dfl?' flow':'');});
+  if(dEl('dad1'))dEl('dad1').className='d-adot '+(!s.ALTERNATION_FLAG?'on':'off2');
+  if(dEl('dad2'))dEl('dad2').className='d-adot '+(s.ALTERNATION_FLAG?'on':'off2');
+  // saídas desktop
+  dOs('do-B1',s.DO_B1_START,false);dOs('do-B2',s.DO_B2_START,false);
+  dOs('do-RUN',s.PUMP_SHOULD_RUN,false);dOs('do-STD',s.STANDBY_ACTIVE,false);
+  dOs('do-AH',s.AL_H,false);dOs('do-AL',s.AL_L,false);
+  dOs('do-HH',s.AL_HH,true);dOs('do-LL',s.AL_LL,true);
+  dOs('do-FL1',s.FAULT_LATCH_B1,true);dOs('do-FL2',s.FAULT_LATCH_B2,true);
+  if(dEl('dph1'))dEl('dph1').textContent=(s.b1H*60).toFixed(1);
+  if(dEl('dph2'))dEl('dph2').textContent=(s.b2H*60).toFixed(1);
+
+}
+
+function drawM(n,run,fault,stdby){
+  const mb=el('mb'+n),bp=el('bp'+n),sh=el('sh'+n),ld=el('led'+n);
+  if(fault){mb.setAttribute('fill','#ffd0c8');mb.setAttribute('stroke','#b82000');bp.setAttribute('fill','#ffd0c8');bp.setAttribute('stroke','#b82000');sh.setAttribute('stroke','#b82000');ld.setAttribute('fill','#b82000');ld.setAttribute('stroke','#b82000');}
+  else if(run){const c=stdby?'#c88000':'#00954a',c2=stdby?'#fff8e0':'#e0f8ec';mb.setAttribute('fill',c2);mb.setAttribute('stroke',c);bp.setAttribute('fill',c2);bp.setAttribute('stroke','#1255a0');sh.setAttribute('stroke','#1255a0');ld.setAttribute('fill',c);ld.setAttribute('stroke',c);}
+  else{mb.setAttribute('fill','#dde8f2');mb.setAttribute('stroke','#8aaccc');bp.setAttribute('fill','#d0e4f4');bp.setAttribute('stroke','#4a80b0');sh.setAttribute('stroke','#507090');ld.setAttribute('fill','#dde8f2');ld.setAttribute('stroke','#a0b8cc');}
+}
+function drawPC(n,run,fault,isPrin,isStd){
+  const c=el('pc'+n),st=el('ps'+n),r=el('pr'+n);
+  if(fault){c.className='pc fault';st.className='psb sfault';st.textContent='FALHA';r.textContent='INOPERANTE';r.className='prole';}
+  else if(isStd){c.className='pc standby-run';st.className='psb sstdby';st.textContent='STAND-BY';r.textContent='ASSUMIU FALHA';r.className='prole';}
+  else if(run){c.className='pc running';st.className='psb srun';st.textContent='RODANDO';r.textContent='BOMBA PRINCIPAL';r.className='prole pr2';}
+  else{c.className='pc'+(isPrin?' principal':'');st.className='psb soff';st.textContent='PARADA';r.textContent=isPrin?'PRÓXIMO CICLO':'STAND-BY';r.className='prole'+(isPrin?' pr2':'');}
+}
+function os(id,val,alarm){const e=el(id);if(val){e.className='os '+(alarm?'trip':'on');e.textContent=alarm?'ALARM':'ON';}else{e.className='os off';e.textContent='OFF';}}
+function el(id){return document.getElementById(id);}
+function ts(id){document.getElementById(id).classList.toggle('collapsed');}
+function toggleAuto(){s.DI_AUTO_MODE=!s.DI_AUTO_MODE;log('info','Modo AUTO → '+(s.DI_AUTO_MODE?'LIGADO':'DESLIGADO'));}
+function cmdReset(){s.DI_RESET_FAULT=true;el('l-RST').className='led amber';setTimeout(()=>{s.DI_RESET_FAULT=false;s.DI_B1_FAULT=false;s.DI_B2_FAULT=false;log('ok','Falhas resetadas');},600);}
+function simFault(n){if(n===1){s.DI_B1_FAULT=true;log('alarm','Falha B1 — térmico/inversor');}else{s.DI_B2_FAULT=true;log('alarm','Falha B2 — térmico/inversor');}}
+function tog(k){s[k]=!s[k];log('info',k.replace(/_/g,' ')+' → '+(s[k]?'TRUE':'FALSE'));}
+const logs=[];
+function log(type,msg){if(logs.length&&logs[0].msg===msg)return;logs.unshift({type,msg,time:new Date().toTimeString().slice(0,8)});if(logs.length>25)logs.pop();el('log-list').innerHTML=logs.map(e=>`<div class="li ${e.type}"><div class="ld2"></div><span class="lt2">${e.time}</span><span>${e.msg}</span></div>`).join('');
+  const dl=document.getElementById('dlog-list');if(dl)dl.innerHTML=logs.map(e=>`<div class="d-li ${e.type}"><div class="d-ld"></div><span class="d-lt">${e.time}</span><span>${e.msg}</span></div>`).join('');}
+
+function clearLog2(){if(dEl('dlog-list'))dEl('dlog-list').innerHTML='';}
+
+function clearLog(){logs.length=0;el('log-list').innerHTML='';}
+log('info','AC 800M — Sistema iniciado');log('ok','Sinal 4-20mA validado — LT-XXX OK');log('info','Aguardando nivel H 80%...');
+requestAnimationFrame(scan);
+</script>
+</body>
+</html>
