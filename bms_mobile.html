@@ -70,7 +70,7 @@ body::before{
 }
 
 /* ── SECTIONS ── */
-.section{margin:8px;border-radius:4px;overflow:hidden;border:1px solid var(--border);}
+.section{margin:6px;border-radius:4px;overflow:hidden;border:1px solid var(--border);}
 .sec-header{
   display:flex;align-items:center;gap:8px;
   padding:8px 12px;background:var(--panel2);
@@ -215,7 +215,7 @@ body::before{
 .stamp-sub{font-size:8px;color:var(--dimtxt);letter-spacing:1px;}
 
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
-@keyframes flicker{0%{transform:scale(1) translateY(0);}100%{transform:scale(1.06) translateY(-2px);}}
+@keyframes flicker{0%{transform:scale(1) translateY(0) rotate(-1deg);}50%{transform:scale(1.04) translateY(-1px) rotate(1deg);}100%{transform:scale(1.08) translateY(-3px) rotate(-1deg);}}
 @keyframes flow{0%{stroke-dashoffset:20;}100%{stroke-dashoffset:0;}}
 .flame-on{opacity:1;animation:flicker .35s ease-in-out infinite alternate;}
 .flame-off{opacity:0;}
@@ -280,7 +280,7 @@ body::before{
   </div>
   <div class="sec-body">
     <div class="mimic-wrap">
-      <svg id="mimic" viewBox="0 0 360 280" xmlns="http://www.w3.org/2000/svg">
+      <svg id="mimic" viewBox="0 0 360 285" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="g" width="30" height="30" patternUnits="userSpaceOnUse">
             <path d="M30 0L0 0 0 30" fill="none" stroke="rgba(0,207,255,0.04)" stroke-width="1"/>
@@ -385,10 +385,32 @@ body::before{
         <line id="uv-b" x1="288" y1="185" x2="278" y2="185" stroke="#304d62" stroke-width="1" stroke-dasharray="2,2"/>
 
         <!-- BOILER -->
-        <rect x="120" y="238" width="160" height="36" rx="3"
+        <rect id="boiler-body" x="120" y="238" width="160" height="36" rx="3"
               fill="rgba(7,13,20,.6)" stroke="#1e3a50" stroke-width="1"/>
-        <text x="162" y="255" font-family="Share Tech Mono" font-size="7" fill="#304d62">CALDEIRA</text>
-        <text x="150" y="265" font-family="Share Tech Mono" font-size="6" fill="#304d62">LSL-201 · STEAM</text>
+        <rect id="boiler-glow" x="123" y="241" width="154" height="30" rx="2"
+              fill="rgba(255,80,0,0)" opacity="0"/>
+        <text id="boiler-label" x="148" y="253" font-family="Share Tech Mono" font-size="7" fill="#304d62">CALDEIRA</text>
+        <text x="130" y="263" font-family="Share Tech Mono" font-size="6" fill="#304d62">LSL-201</text>
+        <!-- TEMP display -->
+        <rect x="226" y="241" width="48" height="26" rx="1" fill="rgba(0,0,0,0.3)" stroke="#1e3a50" stroke-width="1"/>
+        <text x="229" y="250" font-family="Share Tech Mono" font-size="5" fill="#304d62">TEMP</text>
+        <text id="boiler-temp" x="229" y="262" font-family="Share Tech Mono" font-size="10" fill="#304d62">--°C</text>
+        <!-- VAPOR -->
+        <!-- CHAMA INTERNA CALDEIRA -->
+        <g id="boiler-flame" opacity="0">
+          <ellipse cx="200" cy="255" rx="40" ry="7" fill="rgba(255,140,0,0.25)"/>
+          <ellipse cx="183" cy="245" rx="13" ry="16" fill="rgba(255,100,0,0.55)"/>
+          <ellipse cx="200" cy="243" rx="15" ry="18" fill="rgba(255,80,0,0.65)"/>
+          <ellipse cx="217" cy="245" rx="11" ry="14" fill="rgba(255,100,0,0.55)"/>
+          <ellipse cx="200" cy="241" rx="8" ry="11" fill="rgba(255,220,80,0.75)"/>
+        </g>
+        <g id="steam-group" opacity="0">
+          <line x1="148" y1="238" x2="148" y2="222" stroke="var(--cyan)" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.6"/>
+          <text x="140" y="218" font-family="Share Tech Mono" font-size="7" fill="var(--cyan)" opacity="0.7">≋</text>
+          <line x1="178" y1="238" x2="178" y2="218" stroke="var(--cyan)" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.5"/>
+          <text x="170" y="214" font-family="Share Tech Mono" font-size="7" fill="var(--cyan)" opacity="0.6">≋</text>
+          <text x="128" y="216" font-family="Share Tech Mono" font-size="5" fill="var(--cyan)" opacity="0.8">STEAM</text>
+        </g>
         <line id="p-exhaust" x1="200" y1="228" x2="200" y2="238" stroke="#1a3040" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
     </div>
@@ -680,6 +702,7 @@ function scan(){
     if(s.phase!==PH.TRIP) s.phase=PH.TRIP;
   }
 
+  tickDemo(performance.now());
   draw();
   requestAnimationFrame(scan);
 }
@@ -824,6 +847,35 @@ function drawMimic(){
   // UV beam
   sa('uv-b','stroke',s.UV_FLAME_DETECTED?'var(--purple)':'#304d62');
   sa('uv-b','stroke-width',s.UV_FLAME_DETECTED?'2':'1');
+
+  // CALDEIRA animada
+  const boilerOn = s.MAIN_FUEL_VALVE;
+  const bb=el('boiler-body'),bg=el('boiler-glow'),sg=el('steam-group'),bt=el('boiler-temp'),bl=el('boiler-label');
+  const bf=el('boiler-flame');
+  if(!bb||!bg||!sg||!bt||!bl) return;
+  if(boilerOn){
+    if(!window._bt) window._bt=80;
+    if(window._bt<185) window._bt+=0.15;
+    const t=Math.round(window._bt), hot=t>150;
+    bb.setAttribute('stroke',hot?'var(--orange)':'var(--yellow)');
+    bb.setAttribute('fill','rgba(255,80,0,0.07)');
+    bg.setAttribute('fill',`rgba(255,${hot?60:120},0,0.09)`);
+    bg.setAttribute('opacity','1');
+    sg.setAttribute('opacity',hot?'1':'0.4');
+    bt.textContent=t+'°C';
+    bt.setAttribute('fill',hot?'var(--orange)':'var(--yellow)');
+    bl.setAttribute('fill',hot?'var(--orange)':'var(--yellow)');
+    // Chama interna caldeira
+    if(bf){bf.setAttribute('opacity','1');bf.style.animation='flicker .4s ease-in-out infinite alternate';}
+  } else {
+    if(window._bt&&window._bt>25) window._bt-=0.3; else window._bt=25;
+    const t=Math.round(window._bt||25);
+    bb.setAttribute('stroke','#1e3a50');bb.setAttribute('fill','rgba(7,13,20,.6)');
+    bg.setAttribute('opacity','0');sg.setAttribute('opacity','0');
+    bt.textContent=t>30?t+'°C':'--°C';
+    bt.setAttribute('fill','#304d62');bl.setAttribute('fill','#304d62');
+    if(bf){bf.setAttribute('opacity','0');bf.style.animation='';}
+  }
 }
 
 function sp(id,color){ const e=el(id); if(e) e.setAttribute('stroke',color); }
@@ -842,33 +894,16 @@ function cmdStart(){
 }
 
 function cmdReset(){
-  // Verifica quais permissivas ainda estão em falta
-  const falhas = [];
-  if(!s.E_STOP_OK)              falhas.push('E-STOP');
-  if(!s.AIR_PRESSURE_OK)        falhas.push('Pressao Ar');
-  if(!s.AIR_FLOW_OK)            falhas.push('Fluxo Ar');
-  if(!s.LOW_WATER_OK)           falhas.push('Nivel Caldeira');
-  if(!s.PILOT_GAS_PRESSURE_OK)  falhas.push('Pressao Gas Piloto');
-  if(!s.MAIN_FUEL_PRESSURE_OK)  falhas.push('Pressao Combustivel');
-  if(!s.DAMPER_OPEN_OK)         falhas.push('Damper');
-  if(!s.FAN_RUNNING)            falhas.push('Ventilador');
-  if(s.FALSE_FLAME)             falhas.push('Chama Falsa');
-
-  if(falhas.length > 0){
-    log('warn','Reset bloqueado — normalize: ' + falhas.join(', '));
-    return;
-  }
-
-  // Restaura todas as entradas para estado normal
+  // Restaura TODAS as entradas para normal antes de verificar
   s.E_STOP_OK=true; s.AIR_PRESSURE_OK=true; s.AIR_FLOW_OK=true;
   s.LOW_WATER_OK=true; s.PILOT_GAS_PRESSURE_OK=true; s.MAIN_FUEL_PRESSURE_OK=true;
   s.DAMPER_OPEN_OK=true; s.FAN_RUNNING=true;
   s.FALSE_FLAME=false; s.UV_FLAME_DETECTED=false;
-
-  // Limpa trip e alarmes
+  // Limpa trip, alarmes e estados
   s.MASTER_TRIP=false; s.ALARM_FLAME_FAIL=false; s.ALARM_IGNITION_FAIL=false;
   s.PURGE_COMPLETE=false; s.PILOT_FLAME_OK=false; s.startCmd=false;
   s.phase=PH.STANDBY;
+  window._bt=25; // reseta temperatura caldeira
   ['purge','ign','flame'].forEach(t=>{ tmr[t]=tmrMax[t]; tmrOn[t]=false; tmrDone[t]=false; });
   log('ok','Sistema RESETADO — entradas normalizadas — aguardando START');
 }
@@ -911,84 +946,82 @@ function toggleSec(id){
 }
 
 // ════════════════════════════════════
-// MODO DEMO AUTOMÁTICO
-// Ciclo: START → PURGE → PILOTO → IGNIÇÃO → QUEIMA (15s) → TRIP → RESET → repete
+// MODO DEMO AUTOMÁTICO — máquina de estados simples
 // ════════════════════════════════════
-let demoRunning = false;
-let demoTimers = [];
+let demoStep = 0;
+let demoWait = 0;
+let lastDemo = performance.now();
 
-function demoClear(){
-  demoTimers.forEach(t=>clearTimeout(t));
-  demoTimers=[];
-}
+function tickDemo(now){
+  const dt = (now - lastDemo) / 1000;
+  lastDemo = now;
 
-function demoDelay(ms, fn){
-  const t = setTimeout(fn, ms);
-  demoTimers.push(t);
-  return t;
-}
+  switch(demoStep){
 
-function demoWaitPhase(targetPhase, cb, timeout=120000){
-  const start = Date.now();
-  const check = setInterval(()=>{
-    if(s.phase === targetPhase){ clearInterval(check); cb(); }
-    if(Date.now()-start > timeout){ clearInterval(check); }
-  }, 300);
-}
+    case 0: // aguarda 3s e dá START
+      demoWait -= dt;
+      if(demoWait <= 0){
+        log('info','[DEMO] Iniciando sequencia...');
+        cmdStart();
+        demoStep = 1;
+      }
+      break;
 
-function startDemo(){
-  demoClear();
-  demoRunning = true;
+    case 1: // aguarda fase IGNIÇÃO
+      if(s.phase === PH.IGN){ demoStep = 2; demoWait = 2; }
+      break;
 
-  // 1) START automático após 2s
-  demoDelay(2000, ()=>{
-    log('info','[DEMO] Iniciando sequencia automatica...');
-    cmdStart();
-  });
+    case 2: // aguarda 2s e acende UV
+      demoWait -= dt;
+      if(demoWait <= 0){
+        s.UV_FLAME_DETECTED = true;
+        log('info','[DEMO] BE-701 — UV chama detectada');
+        demoStep = 3;
+      }
+      break;
 
-  // 2) Quando entrar em IGNIÇÃO, acende UV após 2s (antes do trial de 5s)
-  demoDelay(2500, ()=>{
-    demoWaitPhase(PH.IGN, ()=>{
-      demoDelay(2000, ()=>{
-        if(s.phase===PH.IGN || s.phase===PH.PROVING){
-          s.UV_FLAME_DETECTED=true;
-          log('info','[DEMO] BE-701 — chama detectada pelo scanner UV');
-        }
-      });
-    });
-  });
+    case 3: // aguarda QUEIMA NORMAL
+      if(s.phase === PH.RUNNING){ demoStep = 4; demoWait = 15; }
+      break;
 
-  // 3) Quando entrar em QUEIMA NORMAL, aguarda 15s e simula queda de pressão
-  demoDelay(3000, ()=>{
-    demoWaitPhase(PH.RUNNING, ()=>{
-      demoDelay(15000, ()=>{
-        if(s.phase===PH.RUNNING){
-          log('warn','[DEMO] Simulando queda de pressao de ar...');
-          s.AIR_PRESSURE_OK=false;
-        }
-      });
-    });
-  });
+    case 4: // aguarda 15s e derruba pressão de ar
+      demoWait -= dt;
+      if(demoWait <= 0){
+        log('warn','[DEMO] Queda pressao ar...');
+        s.AIR_PRESSURE_OK = false;
+        demoStep = 5;
+      }
+      break;
 
-  // 4) Quando entrar em TRIP, aguarda 4s e reseta
-  demoDelay(3500, ()=>{
-    demoWaitPhase(PH.TRIP, ()=>{
-      demoDelay(4000, ()=>{
-        log('info','[DEMO] Normalizando e resetando sistema...');
+    case 5: // aguarda TRIP
+      if(s.phase === PH.TRIP){ demoStep = 6; demoWait = 4; }
+      break;
+
+    case 6: // aguarda 4s e reseta
+      demoWait -= dt;
+      if(demoWait <= 0){
+        log('info','[DEMO] Resetando sistema...');
         cmdReset();
-        // reinicia ciclo completo após 3s
-        demoDelay(3000, ()=>{ startDemo(); });
-      });
-    });
-  });
+        demoStep = 7; demoWait = 3;
+      }
+      break;
+
+    case 7: // aguarda 3s e reinicia ciclo
+      demoWait -= dt;
+      if(demoWait <= 0){
+        log('info','[DEMO] Reiniciando ciclo...');
+        demoStep = 0; demoWait = 0;
+      }
+      break;
+  }
 }
 
 // BOOT
 log('info','BMS-001 — Sistema iniciado');
 log('ok',  'Todas permissivas OK');
-log('info','[DEMO] Modo demonstracao automatico — iniciando em 3s...');
+log('info','[DEMO] Modo automatico ativo');
+demoStep = 0; demoWait = 3;
 requestAnimationFrame(scan);
-setTimeout(()=>{ startDemo(); }, 3000);
 </script>
 </body>
 </html>
