@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Proteção Elétrica — GE SR750 | Simulador 51P</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0a0e1a;
+  --panel:#111827;
+  --panel2:#1a2236;
+  --border:#1e3a5f;
+  --blue:#3b82f6;
+  --blue2:#1d4ed8;
+  --cyan:#06b6d4;
+  --green:#22c55e;
+  --amber:#f59e0b;
+  --red:#ef4444;
+  --text:#e2e8f0;
+  --muted:#64748b;
+  --font-display:'Syne',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-display);min-height:100vh;overflow-x:hidden;}
+
+/* grid background */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(30,58,95,0.18) 1px,transparent 1px),linear-gradient(90deg,rgba(30,58,95,0.18) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;
+}
+
+.wrapper{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:2rem 1.5rem 3rem;}
+
+/* ── HEADER ── */
+.header{text-align:center;margin-bottom:2.5rem;}
+.badge{display:inline-block;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;color:var(--cyan);border:1px solid var(--cyan);padding:4px 14px;border-radius:2px;margin-bottom:1rem;text-transform:uppercase;}
+.header h1{font-size:clamp(1.6rem,4vw,2.6rem);font-weight:800;line-height:1.15;letter-spacing:-.02em;color:#fff;margin-bottom:.5rem;}
+.header h1 span{color:var(--blue);}
+.header p{font-size:.95rem;color:var(--muted);max-width:560px;margin:0 auto;line-height:1.7;}
+
+/* ── EXPLICAÇÃO ── */
+.explainer{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem;}
+@media(max-width:600px){.explainer{grid-template-columns:1fr;}}
+.exp-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.4rem;}
+.exp-card h3{font-size:.8rem;font-family:var(--font-mono);color:var(--cyan);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem;}
+.exp-card p{font-size:.85rem;color:var(--muted);line-height:1.7;}
+.exp-card strong{color:var(--text);}
+
+/* ── CONTROLES ── */
+.controls-panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.4rem;margin-bottom:1.5rem;}
+.controls-panel h3{font-size:.75rem;font-family:var(--font-mono);color:var(--cyan);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1rem;}
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.2rem;}
+.sl-group{display:flex;flex-direction:column;gap:6px;}
+.sl-group label{font-size:11px;font-family:var(--font-mono);color:var(--muted);display:flex;justify-content:space-between;}
+.sl-group label span{color:var(--blue);font-weight:600;}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;border-radius:2px;background:var(--border);outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--blue);cursor:pointer;border:2px solid var(--bg);}
+
+/* ── MÉTRICAS ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1.5rem;}
+.metric{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.9rem 1rem;}
+.metric-label{font-size:10px;font-family:var(--font-mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;}
+.metric-val{font-size:1.4rem;font-weight:600;font-family:var(--font-mono);color:var(--text);}
+.metric-val.blue{color:var(--blue);}
+.metric-val.green{color:var(--green);}
+.metric-val.amber{color:var(--amber);}
+.metric-val.red{color:var(--red);}
+
+/* ── STATUS ── */
+.status{border-radius:6px;padding:10px 16px;font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.06em;margin-bottom:1.5rem;display:flex;align-items:center;gap:10px;border:1px solid;}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.s-normal{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.3);color:var(--green);}
+.s-normal .status-dot{background:var(--green);animation:pulse-g 1.5s infinite;}
+.s-fault{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.3);color:var(--amber);}
+.s-fault .status-dot{background:var(--amber);animation:pulse-a .6s infinite;}
+.s-trip{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.4);color:var(--red);}
+.s-trip .status-dot{background:var(--red);}
+@keyframes pulse-g{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.3);}}
+@keyframes pulse-a{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ── BUTTONS ── */
+.btn-row{display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap;}
+button{font-family:var(--font-display);font-size:.85rem;font-weight:600;padding:9px 22px;border-radius:5px;cursor:pointer;border:1px solid;transition:all .15s;}
+#btn-start{background:var(--blue2);border-color:var(--blue);color:#fff;}
+#btn-start:hover:not(:disabled){background:var(--blue);}
+#btn-start:disabled{opacity:.4;cursor:not-allowed;}
+#btn-reset{background:transparent;border-color:var(--border);color:var(--muted);}
+#btn-reset:hover{border-color:var(--text);color:var(--text);}
+
+/* ── WAVEFORM ── */
+.section-label{font-size:10px;font-family:var(--font-mono);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem;}
+.chart-wrap{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1rem;}
+.wave-wrap{position:relative;height:100px;}
+.curve-wrap{position:relative;height:320px;}
+
+/* ── LEGEND ── */
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:.75rem;}
+.leg{display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--font-mono);color:var(--muted);}
+.leg-box{width:12px;height:3px;border-radius:1px;}
+
+/* ── FOOTER ── */
+.footer{margin-top:2.5rem;text-align:center;border-top:1px solid var(--border);padding-top:1.5rem;}
+.footer p{font-size:.8rem;color:var(--muted);line-height:1.8;}
+.tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:1rem;}
+.tag{font-family:var(--font-mono);font-size:10px;color:var(--blue);border:1px solid rgba(59,130,246,.3);padding:3px 10px;border-radius:2px;letter-spacing:.06em;}
+
+/* trip flash */
+@keyframes trip-flash{0%,100%{border-color:var(--border);}50%{border-color:var(--red);box-shadow:0 0 16px rgba(239,68,68,.2);}}
+.tripped{animation:trip-flash .3s ease 4;}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="badge">Proteção Elétrica — Subestação 13,8 kV</div>
+    <h1>Simulador de Falta Elétrica<br/><span>Relé GE SR750</span> — Proteção 51P</h1>
+    <p>Visualização em tempo real da curva <strong>Extremely Inverse</strong> e do processo de detecção, temporização e disparo do relé de sobrecorrente de fase.</p>
+  </div>
+
+  <!-- EXPLICAÇÃO -->
+  <div class="explainer">
+    <div class="exp-card">
+      <h3>O que é o Relé GE SR750?</h3>
+      <p>Relé de proteção multifuncional para alimentadores de <strong>média tensão (13,8 kV)</strong>. Monitora correntes de fase e atua desligando o disjuntor quando detecta condições anormais, protegendo equipamentos e pessoas.</p>
+    </div>
+    <div class="exp-card">
+      <h3>O que é a proteção 51P?</h3>
+      <p>Sobrecorrente temporizada de fase. Quando a corrente ultrapassa o <strong>pickup (1000 A)</strong>, o relé inicia uma contagem: quanto maior a falta, mais rápido ele dispara — seguindo a curva <strong>Extremely Inverse</strong>.</p>
+    </div>
+    <div class="exp-card">
+      <h3>Curva Extremely Inverse</h3>
+      <p>Equação: <strong>t = TMS × 28,2 / (M² − 1)</strong>, onde M = I / Ip. Ideal para alimentadores com cargas de partida: tolera sobrecargas curtas e dispara muito rápido em curtos-circuitos severos.</p>
+    </div>
+    <div class="exp-card">
+      <h3>Como funciona a simulação?</h3>
+      <p>Ajuste a <strong>corrente de falta</strong> e o <strong>TMS</strong>. Ao clicar em "Simular falta", a forma de onda muda, o ponto percorre a curva e o relé dispara exatamente no tempo calculado.</p>
+    </div>
+  </div>
+
+  <!-- CONTROLES -->
+  <div class="controls-panel">
+    <h3>Parâmetros do Relé</h3>
+    <div class="sliders">
+      <div class="sl-group">
+        <label>Corrente de falta <span id="lb-if">4500 A</span></label>
+        <input type="range" min="1100" max="15000" step="100" value="4500" id="sl-if"/>
+      </div>
+      <div class="sl-group">
+        <label>TMS — Time Multiplier <span id="lb-tms">1,0</span></label>
+        <input type="range" min="0.1" max="2.0" step="0.1" value="1.0" id="sl-tms"/>
+      </div>
+      <div class="sl-group">
+        <label>Velocidade da simulação <span id="lb-spd">2×</span></label>
+        <input type="range" min="1" max="6" step="1" value="2" id="sl-spd"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÉTRICAS -->
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Corrente atual</div><div class="metric-val blue" id="m-atual">300 A</div></div>
+    <div class="metric"><div class="metric-label">Pickup (Ip)</div><div class="metric-val" id="m-ip">1000 A</div></div>
+    <div class="metric"><div class="metric-label">Relação M = I/Ip</div><div class="metric-val amber" id="m-ratio">—</div></div>
+    <div class="metric"><div class="metric-label">Tempo de atuação</div><div class="metric-val green" id="m-tempo">—</div></div>
+    <div class="metric"><div class="metric-label">Contagem regressiva</div><div class="metric-val red" id="m-count">—</div></div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="status s-normal" id="status-bar">
+    <div class="status-dot"></div>
+    <span id="status-txt">Sistema normal — alimentador 13,8 kV energizado</span>
+  </div>
+
+  <!-- BOTÕES -->
+  <div class="btn-row">
+    <button id="btn-start" onclick="startSim()">Simular falta elétrica</button>
+    <button id="btn-reset" onclick="resetSim()">Resetar sistema</button>
+  </div>
+
+  <!-- WAVEFORM -->
+  <div class="section-label">Forma de onda — corrente de fase i(t)</div>
+  <div class="chart-wrap" id="wave-card">
+    <div class="wave-wrap">
+      <canvas id="wave-canvas" role="img" aria-label="Forma de onda da corrente elétrica.">Forma de onda da corrente.</canvas>
+    </div>
+  </div>
+
+  <!-- CURVA -->
+  <div class="section-label">Curva de proteção 51P — Extremely Inverse (log-log)</div>
+  <div class="chart-wrap">
+    <div class="curve-wrap">
+      <canvas id="curve-canvas" role="img" aria-label="Curva 51P Extremely Inverse com ponto de operação animado.">Curva de proteção 51P.</canvas>
+    </div>
+    <div class="legend">
+      <span class="leg"><span class="leg-box" style="background:#3b82f6;height:3px;"></span>Curva 51P — Extremely Inverse</span>
+      <span class="leg"><span class="leg-box" style="background:#ef4444;width:10px;height:10px;border-radius:50%;"></span>Ponto de operação</span>
+      <span class="leg"><span class="leg-box" style="background:#f59e0b;"></span>Pickup — 1000 A</span>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p><strong style="color:#e2e8f0;font-size:.95rem;letter-spacing:.02em;">Iderlan Freitas</strong><br/>
+    Desenvolvido com <strong>Python · Jupyter Notebook · Matplotlib</strong><br/>
+    Relé <strong>GE SR750</strong> — Alimentador 13,8 kV<br/>
+    Proteção 51P — Curva Extremely Inverse (IEC 60255)</p>
+    <div class="tags">
+      <span class="tag">#JupyterNotebook</span>
+      <span class="tag">#Python</span>
+      <span class="tag">#ProtecaoEletrica</span>
+      <span class="tag">#SR750</span>
+      <span class="tag">#GE</span>
+      <span class="tag">#Rele51P</span>
+      <span class="tag">#EngenhariaEletrica</span>
+      <span class="tag">#Subestacao</span>
+      <span class="tag">#13kV</span>
+      <span class="tag">#EnergiaBrasil</span>
+      <span class="tag">#Matplotlib</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const IP = 1000;
+let state = 'normal';
+let animId = null;
+let waveAnimId = null;
+let faultStartTime = null;
+let tripTime = null;
+let wavePhase = 0;
+let waveHistory = Array(220).fill(0);
+
+function tEI(I, tms) {
+  const M = I / IP;
+  if (M <= 1) return null;
+  return tms * (28.2 / (M * M - 1));
+}
+
+function getP() {
+  return {
+    If: parseInt(document.getElementById('sl-if').value),
+    tms: parseFloat(document.getElementById('sl-tms').value),
+    spd: parseInt(document.getElementById('sl-spd').value)
+  };
+}
+
+function buildCurve(tms) {
+  const pts = [];
+  for (let i = 0; i <= 300; i++) {
+    const I = 1010 + i * (19000 - 1010) / 300;
+    const t = tEI(I, tms);
+    if (t && t > 0.005 && t < 200) pts.push({ x: I, y: t });
+  }
+  return pts;
+}
+
+/* ── WAVE CHART ── */
+const wCtx = document.getElementById('wave-canvas').getContext('2d');
+const waveChart = new Chart(wCtx, {
+  type: 'line',
+  data: {
+    labels: Array(220).fill(''),
+    datasets: [{
+      data: Array(220).fill(0),
+      borderColor: '#22c55e',
+      backgroundColor: 'rgba(34,197,94,0.06)',
+      fill: true,
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.3
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    scales: {
+      x: { display: false },
+      y: {
+        grid: { color: 'rgba(30,58,95,0.4)' },
+        ticks: { color: '#64748b', font: { family: "'JetBrains Mono'", size: 10 }, callback: v => v + ' A' }
+      }
+    },
+    plugins: { legend: { display: false } }
+  }
+});
+
+/* ── CURVE CHART ── */
+const cCtx = document.getElementById('curve-canvas').getContext('2d');
+const curveChart = new Chart(cCtx, {
+  type: 'scatter',
+  data: {
+    datasets: [
+      { data: buildCurve(1.0), showLine: true, borderColor: '#3b82f6', backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 0, tension: 0.1 },
+      { data: [], showLine: false, borderColor: '#ef4444', backgroundColor: '#ef4444', pointRadius: 10, pointHoverRadius: 12 },
+      { data: [{ x: IP, y: 0.008 }, { x: IP, y: 200 }], showLine: true, borderColor: '#f59e0b', borderDash: [5, 3], borderWidth: 1.5, pointRadius: 0 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    scales: {
+      x: {
+        type: 'logarithmic', min: 900, max: 20000,
+        title: { display: true, text: 'Corrente de Falta [A]', color: '#64748b', font: { family: "'JetBrains Mono'", size: 11 } },
+        grid: { color: 'rgba(30,58,95,0.4)' },
+        ticks: { color: '#64748b', font: { family: "'JetBrains Mono'", size: 10 }, callback: v => v >= 1000 ? (v/1000).toFixed(0)+'k' : v }
+      },
+      y: {
+        type: 'logarithmic', min: 0.008, max: 100,
+        title: { display: true, text: 'Tempo de Atuação [s]', color: '#64748b', font: { family: "'JetBrains Mono'", size: 11 } },
+        grid: { color: 'rgba(30,58,95,0.4)' },
+        ticks: { color: '#64748b', font: { family: "'JetBrains Mono'", size: 10 } }
+      }
+    },
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `I = ${c.parsed.x.toFixed(0)} A   →   t = ${c.parsed.y.toFixed(3)} s` } } }
+  }
+});
+
+/* ── WAVE LOOP ── */
+function waveLoop() {
+  const p = getP();
+  let amp = state === 'fault' ? p.If : state === 'trip' ? 0 : 300;
+  wavePhase += 0.16 + (state === 'fault' ? 0.04 : 0);
+  const noise = state === 'fault' ? amp * 0.07 * Math.sin(wavePhase * 3.3) : 0;
+  waveHistory.push(Math.round(amp * Math.sin(wavePhase) + noise));
+  if (waveHistory.length > 220) waveHistory.shift();
+  waveChart.data.datasets[0].data = [...waveHistory];
+  waveChart.data.datasets[0].borderColor = state === 'fault' ? '#f59e0b' : state === 'trip' ? '#475569' : '#22c55e';
+  waveChart.data.datasets[0].backgroundColor = state === 'fault' ? 'rgba(245,158,11,0.06)' : state === 'trip' ? 'transparent' : 'rgba(34,197,94,0.06)';
+  const maxA = state === 'fault' ? Math.round(p.If * 1.15) : 400;
+  waveChart.options.scales.y.max = maxA;
+  waveChart.options.scales.y.min = -maxA;
+  waveChart.update('none');
+  waveAnimId = requestAnimationFrame(waveLoop);
+}
+waveLoop();
+
+/* ── SLIDERS ── */
+function updateLabels() {
+  const p = getP();
+  document.getElementById('lb-if').textContent = p.If.toLocaleString('pt-BR') + ' A';
+  document.getElementById('lb-tms').textContent = p.tms.toFixed(1);
+  document.getElementById('lb-spd').textContent = p.spd + '×';
+  curveChart.data.datasets[0].data = buildCurve(p.tms);
+  curveChart.update('none');
+}
+['sl-if','sl-tms','sl-spd'].forEach(id => document.getElementById(id).addEventListener('input', updateLabels));
+
+/* ── STATUS ── */
+function setStatus(cls, txt) {
+  const el = document.getElementById('status-bar');
+  el.className = 'status ' + cls;
+  document.getElementById('status-txt').textContent = txt;
+}
+
+/* ── SIMULAÇÃO ── */
+function startSim() {
+  if (state !== 'normal') return;
+  const p = getP();
+  const t = tEI(p.If, p.tms);
+  if (!t) return;
+  tripTime = t;
+  state = 'fault';
+  faultStartTime = performance.now();
+  document.getElementById('btn-start').disabled = true;
+  const M = (p.If / IP).toFixed(1);
+  document.getElementById('m-ratio').textContent = M + '×';
+  document.getElementById('m-tempo').textContent = t.toFixed(3) + ' s';
+  document.getElementById('m-atual').textContent = p.If.toLocaleString('pt-BR') + ' A';
+  curveChart.data.datasets[1].data = [{ x: p.If, y: t }];
+  curveChart.data.datasets[1].backgroundColor = '#f59e0b';
+  curveChart.data.datasets[1].borderColor = '#f59e0b';
+  curveChart.update('none');
+  setStatus('s-fault', 'FALTA DETECTADA — Relé 51P em contagem regressiva...');
+
+  function tick() {
+    if (state !== 'fault') return;
+    const elapsed = (performance.now() - faultStartTime) / 1000 / p.spd;
+    const rem = Math.max(0, tripTime - elapsed);
+    document.getElementById('m-count').textContent = rem.toFixed(2) + ' s';
+    const prog = Math.min(1, elapsed / tripTime);
+    if (prog > 0.7) {
+      curveChart.data.datasets[1].backgroundColor = '#ef4444';
+      curveChart.data.datasets[1].borderColor = '#ef4444';
+      curveChart.update('none');
+    }
+    if (rem <= 0) { doTrip(p); return; }
+    animId = requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+function doTrip(p) {
+  state = 'trip';
+  cancelAnimationFrame(animId);
+  setStatus('s-trip', 'TRIP — Relé 51P atuou! Disjuntor aberto em ' + tripTime.toFixed(3) + ' s');
+  document.getElementById('m-count').textContent = '0.000 s';
+  document.getElementById('m-atual').textContent = '0 A';
+  document.getElementById('wave-card').classList.add('tripped');
+  curveChart.data.datasets[1].backgroundColor = '#ef4444';
+  curveChart.data.datasets[1].borderColor = '#ef4444';
+  curveChart.update('none');
+  let f = 0;
+  const fi = setInterval(() => {
+    f++;
+    curveChart.data.datasets[1].pointRadius = f % 2 === 0 ? 10 : 16;
+    curveChart.update('none');
+    if (f > 10) { clearInterval(fi); curveChart.data.datasets[1].pointRadius = 10; curveChart.update('none'); }
+  }, 140);
+}
+
+function resetSim() {
+  cancelAnimationFrame(animId);
+  state = 'normal';
+  tripTime = null;
+  waveHistory = Array(220).fill(0);
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('m-atual').textContent = '300 A';
+  document.getElementById('m-ratio').textContent = '—';
+  document.getElementById('m-tempo').textContent = '—';
+  document.getElementById('m-count').textContent = '—';
+  document.getElementById('wave-card').classList.remove('tripped');
+  setStatus('s-normal', 'Sistema normal — alimentador 13,8 kV energizado');
+  curveChart.data.datasets[1].data = [];
+  curveChart.update('none');
+}
+
+function autoLoop() {
+  resetSim();
+  setTimeout(() => {
+    startSim();
+    const checkTrip = setInterval(() => {
+      if (state === 'trip') {
+        clearInterval(checkTrip);
+        setTimeout(autoLoop, 3000);
+      }
+    }, 200);
+  }, 2500);
+}
+
+window.addEventListener('load', () => {
+  setTimeout(autoLoop, 1500);
+});
+</script>
+</body>
+</html>
